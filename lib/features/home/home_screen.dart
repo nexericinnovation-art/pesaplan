@@ -26,16 +26,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _syncProfile() async {
     final auth = ClerkAuth.of(context, listen: false);
-<<<<<<< HEAD
-    final clerkUserId = AuthIdentityService.currentClerkUserId(auth);
-    if (clerkUserId == null) {
-=======
     if (!AuthIdentityService.isAuthenticated(auth)) {
       return;
     }
+
     final sessionToken = await AuthIdentityService.currentSessionToken(auth);
     if (sessionToken == null || sessionToken.isEmpty) {
->>>>>>> temp-work
       return;
     }
 
@@ -46,11 +42,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     try {
       final profile = await SupabaseService.ensureProfileForClerkUser(
-<<<<<<< HEAD
-        clerkUserId: clerkUserId,
-=======
         sessionToken: sessionToken,
->>>>>>> temp-work
       );
       if (mounted) {
         setState(() {

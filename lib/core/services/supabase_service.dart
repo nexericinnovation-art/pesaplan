@@ -61,17 +61,12 @@ class SupabaseService {
     );
   }
 
-<<<<<<< HEAD
-  static Future<Map<String, dynamic>> syncProfileWithEdgeFunction({
-    required String clerkUserId,
-=======
   /// [sessionToken] must be the caller's real Clerk session JWT (from
   /// `ClerkAuthState.sessionToken()`), which the Edge Function verifies
   /// server-side. Do not call this with a bare clerkUserId string — the
   /// server no longer trusts a client-supplied id.
   static Future<Map<String, dynamic>> syncProfileWithEdgeFunction({
     required String sessionToken,
->>>>>>> temp-work
     String? overrideUrl,
   }) async {
     final edgeFunctionUrl = buildEdgeFunctionUrl(AppEnvironment.supabaseUrl, overrideUrl);
@@ -81,15 +76,11 @@ class SupabaseService {
 
     final response = await http.post(
       Uri.parse(edgeFunctionUrl),
-<<<<<<< HEAD
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'clerkUserId': clerkUserId}),
-=======
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $sessionToken',
       },
->>>>>>> temp-work
+      body: jsonEncode({}),
     );
 
     if (response.statusCode >= 400) {
@@ -100,37 +91,6 @@ class SupabaseService {
     return decodedBody;
   }
 
-<<<<<<< HEAD
-  static Future<ProfileRecord?> ensureProfileForClerkUser({required String clerkUserId}) async {
-    try {
-      final body = await syncProfileWithEdgeFunction(clerkUserId: clerkUserId);
-      final profileMap = body['profile'];
-      if (profileMap is Map<String, dynamic>) {
-        return ProfileRecord.fromMap(profileMap);
-      }
-    } catch (_) {
-      // Fall back to the direct client insert path when the Edge Function is not reachable.
-    }
-
-    final response = await client
-        .from('profiles')
-        .select('id, clerk_user_id, created_at')
-        .eq('clerk_user_id', clerkUserId)
-        .limit(1)
-        .maybeSingle();
-
-    if (response != null) {
-      return ProfileRecord.fromMap(response);
-    }
-
-    final insertResponse = await client
-        .from('profiles')
-        .insert({'clerk_user_id': clerkUserId})
-        .select('id, clerk_user_id, created_at')
-        .single();
-
-    return ProfileRecord.fromMap(insertResponse);
-=======
   /// Ensures a profile row exists for the currently signed-in Clerk user.
   ///
   /// This always goes through the `sync-clerk-profile` Edge Function, which
@@ -147,6 +107,5 @@ class SupabaseService {
       return ProfileRecord.fromMap(profileMap);
     }
     return null;
->>>>>>> temp-work
   }
 }

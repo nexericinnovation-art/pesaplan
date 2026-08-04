@@ -1,18 +1,5 @@
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-<<<<<<< HEAD
-
-serve(async (req) => {
-  try {
-    const payload = await req.json();
-    const { clerkUserId } = payload;
-
-    if (!clerkUserId) {
-      return new Response(JSON.stringify({ error: 'Missing clerkUserId' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      });
-=======
 import * as jose from 'https://esm.sh/jose@5';
 
 // Verifies the caller's Clerk session token and returns the verified Clerk
@@ -60,7 +47,6 @@ serve(async (req) => {
     } catch (response) {
       if (response instanceof Response) return response;
       throw response;
->>>>>>> temp-work
     }
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
@@ -75,16 +61,9 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
 
-<<<<<<< HEAD
-    const { data, error } = await supabase
-      .from('profiles')
-      .upsert({ clerk_user_id: clerkUserId }, { onConflict: 'clerk_user_id' })
-=======
-    // Always use the verified sub from the token, never a client-supplied value.
     const { data, error } = await supabase
       .from('profiles')
       .upsert({ clerk_user_id: verifiedClerkUserId }, { onConflict: 'clerk_user_id' })
->>>>>>> temp-work
       .select('id, clerk_user_id, created_at')
       .single();
 
