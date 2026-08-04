@@ -145,6 +145,9 @@ class _RootGateState extends State<RootGate> {
       );
     }
 
-    return const HomeScreen();
+    return HomeScreen(
+      clerkUserId: profile.clerkUserId,
+      currency: (profile.currency ?? '').isNotEmpty ? profile.currency! : 'KES',
+    );
   }
 }
