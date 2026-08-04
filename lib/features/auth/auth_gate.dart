@@ -1,7 +1,8 @@
 import 'package:clerk_flutter/clerk_flutter.dart';
 import 'package:flutter/material.dart';
 
-import '../home/home_screen.dart';
+import '../../core/services/clerk_session_bridge.dart';
+import '../root/root_gate.dart';
 import 'auth_screen.dart';
 
 class AuthGate extends StatelessWidget {
@@ -23,20 +24,29 @@ class AuthGate extends StatelessWidget {
     }
 
     return ClerkAuthBuilder(
-      signedInBuilder: (context, auth) => const HomeScreen(),
-      signedOutBuilder: (context, auth) => const AuthScreen(),
-      builder: (context, auth) => const Scaffold(
-        body: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CircularProgressIndicator(),
-              SizedBox(height: 16),
-              Text('Checking your authentication state…'),
-            ],
+      signedInBuilder: (context, auth) {
+        ClerkSessionBridge.register(auth);
+        return const RootGate();
+      },
+      signedOutBuilder: (context, auth) {
+        ClerkSessionBridge.register(auth);
+        return const AuthScreen();
+      },
+      builder: (context, auth) {
+        ClerkSessionBridge.register(auth);
+        return const Scaffold(
+          body: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircularProgressIndicator(),
+                SizedBox(height: 16),
+                Text('Checking your authentication state…'),
+              ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
