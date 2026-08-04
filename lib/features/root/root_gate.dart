@@ -53,12 +53,21 @@ class _RootGateState extends State<RootGate> {
       }
 
       // Step 1: make sure the row exists (server-verified).
-      await SupabaseService.ensureProfileForClerkUser(sessionToken: sessionToken);
+      final ensuredProfile = await SupabaseService.ensureProfileForClerkUser(sessionToken: sessionToken);
 
-      // Step 2: read the full row directly — this is the first place in the
-      // app that depends on the Clerk->Supabase JWT wiring actually being
-      // live. If it's not, this returns null even though the row exists.
-      final profile = await SupabaseService.fetchProfile(clerkUserId: clerkUserId);
+      if (!mounted) return;
+
+      if (ensuredProfile != null) {
+        setState(() {
+          _profile = ensuredProfile;
+          _isLoading = false;
+        });
+        return;
+      }
+
+      // Step 2: read the profile through a server-side endpoint so the app
+      // does not depend on client-side RLS being fully wired for this flow.
+      final profile = await SupabaseService.fetchProfile(sessionToken: sessionToken);
 
       if (!mounted) return;
 
@@ -77,11 +86,13 @@ class _RootGateState extends State<RootGate> {
         _profile = profile;
         _isLoading = false;
       });
-    } catch (_) {
+    } catch (error) {
       if (!mounted) return;
       setState(() {
         _hasError = true;
-        _errorMessage = "Couldn't load your profile. Check your connection and try again.";
+        _errorMessage = error is StateError && error.message.isNotEmpty
+            ? error.message
+            : 'Your profile could not be loaded yet. This usually means the Clerk-to-Supabase connection is not configured correctly.';
         _isLoading = false;
       });
     }

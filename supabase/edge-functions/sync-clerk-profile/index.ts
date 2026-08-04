@@ -60,11 +60,62 @@ serve(async (req) => {
     }
 
     const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
+    const payload = await req.json().catch(() => ({}));
+    const action = typeof payload.action === 'string' ? payload.action : 'sync-profile';
+
+    if (action === 'read-profile') {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, clerk_user_id, created_at, full_name, country, currency, monthly_income, income_source, financial_goal, monthly_savings_target, existing_debt_amount, preferred_budgeting_method, onboarding_completed')
+        .eq('clerk_user_id', verifiedClerkUserId)
+        .maybeSingle();
+
+      if (error) {
+        return new Response(JSON.stringify({ error: error.message }), {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+
+      return new Response(JSON.stringify({ profile: data }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (action === 'update-profile') {
+      const updates = payload.updates;
+      if (!updates || typeof updates !== 'object' || Array.isArray(updates)) {
+        return new Response(JSON.stringify({ error: 'Invalid updates payload' }), {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .update(updates)
+        .eq('clerk_user_id', verifiedClerkUserId)
+        .select('id, clerk_user_id, created_at, full_name, country, currency, monthly_income, income_source, financial_goal, monthly_savings_target, existing_debt_amount, preferred_budgeting_method, onboarding_completed')
+        .single();
+
+      if (error) {
+        return new Response(JSON.stringify({ error: error.message }), {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+
+      return new Response(JSON.stringify({ profile: data }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
 
     const { data, error } = await supabase
       .from('profiles')
       .upsert({ clerk_user_id: verifiedClerkUserId }, { onConflict: 'clerk_user_id' })
-      .select('id, clerk_user_id, created_at')
+      .select('id, clerk_user_id, created_at, full_name, country, currency, monthly_income, income_source, financial_goal, monthly_savings_target, existing_debt_amount, preferred_budgeting_method, onboarding_completed')
       .single();
 
     if (error) {

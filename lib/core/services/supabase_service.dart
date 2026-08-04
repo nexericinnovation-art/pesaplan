@@ -135,39 +135,56 @@ class SupabaseService {
     return null;
   }
 
-  /// Direct, RLS-protected read of the full profile row (including
-  /// onboarding fields) for the given Clerk user. Relies on [client]
-  /// carrying a live Clerk JWT (see [ClerkSessionBridge]) — if Clerk isn't
-  /// registered as a Supabase Third-Party Auth provider yet, this will
-  /// return null even for the user's own row, because `auth.jwt()` is null
-  /// and every RLS policy denies the read.
-  static Future<ProfileRecord?> fetchProfile({required String clerkUserId}) async {
-    final row = await client
-        .from('profiles')
-        .select()
-        .eq('clerk_user_id', clerkUserId)
-        .maybeSingle();
+  /// Reads the profile row via the server-verified edge function. This avoids
+  /// depending on client-side RLS/third-party auth being fully wired for the
+  /// initial profile read after sign-in.
+  static Future<ProfileRecord?> fetchProfile({required String sessionToken}) async {
+    final response = await http.post(
+      Uri.parse(buildEdgeFunctionUrl(AppEnvironment.supabaseUrl, null)),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $sessionToken',
+      },
+      body: jsonEncode({'action': 'read-profile'}),
+    );
 
-    if (row == null) {
+    if (response.statusCode >= 400) {
       return null;
     }
-    return ProfileRecord.fromMap(row);
+
+    final decodedBody = jsonDecode(response.body) as Map<String, dynamic>;
+    final profileMap = decodedBody['profile'];
+    if (profileMap is Map<String, dynamic>) {
+      return ProfileRecord.fromMap(profileMap);
+    }
+    return null;
   }
 
-  /// Direct, RLS-protected update of the caller's own profile row — used by
-  /// the onboarding screen. [updates] should only ever contain the
-  /// onboarding-related columns; never pass `id` or `clerk_user_id` here.
+  /// Updates the profile row via the server-verified edge function. This keeps
+  /// onboarding writes on the server side, where the caller's Clerk identity
+  /// can be verified independently of the client-side RLS setup.
   static Future<ProfileRecord> updateProfile({
-    required String clerkUserId,
+    required String sessionToken,
     required Map<String, dynamic> updates,
   }) async {
-    final row = await client
-        .from('profiles')
-        .update(updates)
-        .eq('clerk_user_id', clerkUserId)
-        .select()
-        .single();
+    final response = await http.post(
+      Uri.parse(buildEdgeFunctionUrl(AppEnvironment.supabaseUrl, null)),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $sessionToken',
+      },
+      body: jsonEncode({'action': 'update-profile', 'updates': updates}),
+    );
 
-    return ProfileRecord.fromMap(row);
+    if (response.statusCode >= 400) {
+      throw StateError('Profile update failed.');
+    }
+
+    final decodedBody = jsonDecode(response.body) as Map<String, dynamic>;
+    final profileMap = decodedBody['profile'];
+    if (profileMap is Map<String, dynamic>) {
+      return ProfileRecord.fromMap(profileMap);
+    }
+    throw StateError('Profile update returned no profile.');
   }
 }

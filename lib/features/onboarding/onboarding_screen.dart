@@ -1,5 +1,7 @@
+import 'package:clerk_flutter/clerk_flutter.dart';
 import 'package:flutter/material.dart';
 
+import '../../core/services/auth_identity_service.dart';
 import '../../core/services/supabase_service.dart';
 
 /// Currencies we support today. The schema itself isn't limited to these —
@@ -94,7 +96,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         'preferred_budgeting_method': _budgetingMethod,
       };
 
-      await SupabaseService.updateProfile(clerkUserId: widget.clerkUserId, updates: updates);
+      final sessionToken = await AuthIdentityService.currentSessionToken(ClerkAuth.of(context, listen: false));
+      if (sessionToken == null || sessionToken.isEmpty) {
+        throw StateError('No session token available.');
+      }
+
+      await SupabaseService.updateProfile(sessionToken: sessionToken, updates: updates);
 
       if (!mounted) return;
       widget.onComplete();
