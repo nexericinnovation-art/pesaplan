@@ -1,0 +1,16 @@
+# Supabase CLI project config.
+#
+# `verify_jwt = false` on sync-clerk-profile is required, not optional:
+# by default Supabase's Edge Function gateway requires a Supabase-issued
+# JWT (or the anon key) in the Authorization header before your function
+# code even runs. We deliberately send a Clerk-issued session JWT there
+# instead, so the function can verify it itself against Clerk's JWKS
+# (see supabase/edge-functions/sync-clerk-profile/index.ts). With the
+# platform check left on, every request is rejected at the gateway with
+# 401 UNAUTHORIZED_ASYMMETRIC_JWT before reaching that verification code.
+# Turning this off does NOT remove authentication — it just moves it from
+# "Supabase checks its own JWT" to "our function checks Clerk's JWT",
+# which is the whole point of this function.
+
+[functions.sync-clerk-profile]
+verify_jwt = false
