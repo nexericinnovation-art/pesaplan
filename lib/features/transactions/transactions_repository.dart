@@ -86,6 +86,28 @@ class TransactionRecord {
   }
 }
 
+class DashboardSummary {
+  DashboardSummary({
+    required this.lifetimeBalance,
+    required this.monthIncome,
+    required this.monthExpenses,
+  });
+
+  final num lifetimeBalance;
+  final num monthIncome;
+  final num monthExpenses;
+
+  num get monthSavings => monthIncome - monthExpenses;
+
+  factory DashboardSummary.fromMap(Map<String, dynamic> map) {
+    return DashboardSummary(
+      lifetimeBalance: (map['lifetime_balance'] as num?) ?? 0,
+      monthIncome: (map['month_income'] as num?) ?? 0,
+      monthExpenses: (map['month_expenses'] as num?) ?? 0,
+    );
+  }
+}
+
 /// All methods here are direct, RLS-protected Supabase client calls — they
 /// rely on the Clerk JWT bridge (see ClerkSessionBridge) actually being
 /// live. Every write explicitly sets `user_id` to the caller's own Clerk
@@ -93,6 +115,19 @@ class TransactionRecord {
 /// can't be spoofed to another user's id (the write is rejected either way
 /// if it doesn't match the JWT's `sub`).
 class TransactionsRepository {
+  /// Computed server-side (see the `get_dashboard_summary` SQL function) so
+  /// the dashboard never has to pull full transaction history into the app
+  /// just to sum it.
+  static Future<DashboardSummary> fetchDashboardSummary({required String clerkUserId}) async {
+    final rows = await SupabaseService.client.rpc(
+      'get_dashboard_summary',
+      params: {'p_user_id': clerkUserId},
+    );
+
+    final row = (rows as List).first as Map<String, dynamic>;
+    return DashboardSummary.fromMap(row);
+  }
+
   static Future<List<CategoryRecord>> fetchCategories({
     required String clerkUserId,
     String? type,
