@@ -1,6 +1,8 @@
 import 'package:clerk_flutter/clerk_flutter.dart';
 import 'package:flutter/material.dart';
 
+import '../budgets/budgets_screen.dart';
+import '../goals/savings_goals_screen.dart';
 import '../transactions/add_edit_transaction_screen.dart';
 import '../transactions/transactions_repository.dart';
 import '../transactions/transactions_screen.dart';
@@ -157,6 +159,43 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ],
               ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _openAllTransactions,
+                  icon: const Icon(Icons.receipt_long_outlined),
+                  label: const Text('Transactions'),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => BudgetsScreen(clerkUserId: widget.clerkUserId, currency: widget.currency),
+                    ),
+                  ),
+                  icon: const Icon(Icons.pie_chart_outline),
+                  label: const Text('Budgets'),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => SavingsGoalsScreen(clerkUserId: widget.clerkUserId, currency: widget.currency),
+                ),
+              ),
+              icon: const Icon(Icons.flag_outlined),
+              label: const Text('Savings Goals'),
             ),
           ),
           const SizedBox(height: 12),
