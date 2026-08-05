@@ -1,6 +1,8 @@
-import 'package:flutter/material.dart';
+// lib/app/app.dart
 
+import 'package:flutter/material.dart';
 import '../features/auth/auth_gate.dart';
+import 'theme/app_theme.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -10,10 +12,9 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Pesaplan',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
-        useMaterial3: true,
-      ),
+      theme: AppTheme.lightClayTheme,
+      darkTheme: AppTheme.darkClayTheme,
+      themeMode: ThemeMode.system,
       home: const AuthGate(),
     );
   }

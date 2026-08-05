@@ -4,8 +4,9 @@ import 'package:flutter/material.dart';
 import '../../core/services/auth_identity_service.dart';
 import '../../core/services/supabase_service.dart';
 import '../auth/auth_status_view.dart';
-import '../home/home_screen.dart';
+import 'root_navigation_screen.dart';
 import '../onboarding/onboarding_screen.dart';
+
 
 /// Shown once a Clerk session exists. Handles the one-time sequence every
 /// signed-in user needs before they see any real screen:
@@ -145,7 +146,7 @@ class _RootGateState extends State<RootGate> {
       );
     }
 
-    return HomeScreen(
+    return RootNavigationScreen(
       clerkUserId: profile.clerkUserId,
       currency: (profile.currency ?? '').isNotEmpty ? profile.currency! : 'KES',
     );
