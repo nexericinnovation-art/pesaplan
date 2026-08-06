@@ -1,16 +1,21 @@
 import 'package:clerk_flutter/clerk_flutter.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/providers/profile_provider.dart';
 import '../../core/services/auth_identity_service.dart';
 import '../../app/theme/app_colors.dart';
 import '../../ui/design_system/components/app_card.dart';
 import '../../ui/design_system/components/app_button.dart';
+import '../debts/debts_screen.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final auth = ClerkAuth.of(context, listen: true);
+    final clerkUserId = AuthIdentityService.currentClerkUserId(auth) ?? '';
+    final currency = ref.watch(profileControllerProvider).valueOrNull?.currency ?? 'KES';
     final email = AuthIdentityService.currentClerkEmail(auth) ?? 'No email';
     final user = auth.client.user;
     final name = (user != null)
@@ -105,6 +110,20 @@ class ProfileScreen extends StatelessWidget {
                   children: [
                     _buildSettingsTile(
                       context,
+                      icon: Icons.account_balance_wallet_outlined,
+                      title: 'Debts',
+                      color: Colors.redAccent,
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => DebtsScreen(clerkUserId: clerkUserId, currency: currency),
+                          ),
+                        );
+                      },
+                    ),
+                    const Divider(height: 1, color: Color(0xFFEEEEEE)),
+                    _buildSettingsTile(
+                      context,
                       icon: Icons.shield_outlined,
                       title: 'Account Security',
                       color: Colors.blueAccent,
@@ -174,6 +193,7 @@ class ProfileScreen extends StatelessWidget {
     required IconData icon,
     required String title,
     required Color color,
+    VoidCallback? onTap,
   }) {
     return ListTile(
       leading: Container(
@@ -194,8 +214,8 @@ class ProfileScreen extends StatelessWidget {
         ),
       ),
       trailing: const Icon(Icons.chevron_right, color: Colors.black26, size: 18),
-      onTap: () {
-        // Can expand in future
+      onTap: onTap ?? () {
+        // Account Security / Notifications / Appearance: not implemented yet.
       },
     );
   }

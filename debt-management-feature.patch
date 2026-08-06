@@ -1,0 +1,1020 @@
+diff --git a/lib/features/debts/create_debt_screen.dart b/lib/features/debts/create_debt_screen.dart
+new file mode 100644
+index 0000000..84dcdf7
+--- /dev/null
++++ b/lib/features/debts/create_debt_screen.dart
+@@ -0,0 +1,191 @@
++import 'package:flutter/material.dart';
++
++import 'debts_repository.dart';
++
++class CreateDebtScreen extends StatefulWidget {
++  const CreateDebtScreen({super.key, required this.clerkUserId, required this.currency});
++
++  final String clerkUserId;
++  final String currency;
++
++  @override
++  State<CreateDebtScreen> createState() => _CreateDebtScreenState();
++}
++
++class _CreateDebtScreenState extends State<CreateDebtScreen> {
++  final _formKey = GlobalKey<FormState>();
++  final _loanNameController = TextEditingController();
++  final _lenderController = TextEditingController();
++  final _originalAmountController = TextEditingController();
++  final _currentBalanceController = TextEditingController();
++  final _interestRateController = TextEditingController();
++  final _minimumPaymentController = TextEditingController();
++  String? _paymentFrequency;
++  DateTime? _dueDate;
++
++  bool _isSaving = false;
++  String? _errorMessage;
++
++  static const _frequencies = ['daily', 'weekly', 'monthly', 'quarterly', 'yearly'];
++
++  @override
++  void dispose() {
++    _loanNameController.dispose();
++    _lenderController.dispose();
++    _originalAmountController.dispose();
++    _currentBalanceController.dispose();
++    _interestRateController.dispose();
++    _minimumPaymentController.dispose();
++    super.dispose();
++  }
++
++  Future<void> _pickDueDate() async {
++    final picked = await showDatePicker(
++      context: context,
++      initialDate: _dueDate ?? DateTime.now().add(const Duration(days: 30)),
++      firstDate: DateTime.now().subtract(const Duration(days: 365 * 5)),
++      lastDate: DateTime(2100),
++    );
++    if (picked != null) {
++      setState(() => _dueDate = picked);
++    }
++  }
++
++  String _formatDate(DateTime date) =>
++      '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
++
++  Future<void> _save() async {
++    if (!(_formKey.currentState?.validate() ?? false)) return;
++
++    setState(() {
++      _isSaving = true;
++      _errorMessage = null;
++    });
++
++    try {
++      await DebtsRepository.createDebt(
++        clerkUserId: widget.clerkUserId,
++        loanName: _loanNameController.text.trim(),
++        lender: _lenderController.text.trim().isEmpty ? null : _lenderController.text.trim(),
++        originalAmount: num.parse(_originalAmountController.text.trim()),
++        currentBalance: num.tryParse(_currentBalanceController.text.trim()),
++        interestRate: num.tryParse(_interestRateController.text.trim()),
++        minimumPayment: num.tryParse(_minimumPaymentController.text.trim()),
++        paymentFrequency: _paymentFrequency,
++        dueDate: _dueDate,
++        startDate: DateTime.now(),
++      );
++      if (!mounted) return;
++      Navigator.of(context).pop(true);
++    } catch (e) {
++      debugPrint('SAVE FAILED (debt): $e');
++      if (!mounted) return;
++      setState(() {
++        _isSaving = false;
++        _errorMessage = "Couldn't save. Check your connection and try again.";
++      });
++    }
++  }
++
++  @override
++  Widget build(BuildContext context) {
++    return Scaffold(
++      appBar: AppBar(title: const Text('Add a debt')),
++      body: SafeArea(
++        child: Form(
++          key: _formKey,
++          child: ListView(
++            padding: const EdgeInsets.all(20),
++            children: [
++              TextFormField(
++                controller: _loanNameController,
++                decoration: const InputDecoration(labelText: 'Loan name', border: OutlineInputBorder()),
++                validator: (value) => (value == null || value.trim().isEmpty) ? 'Give this debt a name' : null,
++              ),
++              const SizedBox(height: 16),
++              TextFormField(
++                controller: _lenderController,
++                decoration: const InputDecoration(labelText: 'Lender (optional)', border: OutlineInputBorder()),
++              ),
++              const SizedBox(height: 16),
++              TextFormField(
++                controller: _originalAmountController,
++                decoration: InputDecoration(
++                  labelText: 'Original amount',
++                  prefixText: '${widget.currency} ',
++                  border: const OutlineInputBorder(),
++                ),
++                keyboardType: const TextInputType.numberWithOptions(decimal: true),
++                validator: (value) {
++                  final parsed = num.tryParse((value ?? '').trim());
++                  if (parsed == null || parsed <= 0) return 'Enter a valid original amount';
++                  return null;
++                },
++              ),
++              const SizedBox(height: 16),
++              TextFormField(
++                controller: _currentBalanceController,
++                decoration: InputDecoration(
++                  labelText: 'Current balance (optional — defaults to original amount)',
++                  prefixText: '${widget.currency} ',
++                  border: const OutlineInputBorder(),
++                ),
++                keyboardType: const TextInputType.numberWithOptions(decimal: true),
++              ),
++              const SizedBox(height: 16),
++              TextFormField(
++                controller: _interestRateController,
++                decoration: const InputDecoration(
++                  labelText: 'Interest rate % (optional)',
++                  border: OutlineInputBorder(),
++                ),
++                keyboardType: const TextInputType.numberWithOptions(decimal: true),
++              ),
++              const SizedBox(height: 16),
++              TextFormField(
++                controller: _minimumPaymentController,
++                decoration: InputDecoration(
++                  labelText: 'Minimum payment (optional)',
++                  prefixText: '${widget.currency} ',
++                  border: const OutlineInputBorder(),
++                ),
++                keyboardType: const TextInputType.numberWithOptions(decimal: true),
++              ),
++              const SizedBox(height: 16),
++              DropdownButtonFormField<String>(
++                initialValue: _paymentFrequency,
++                decoration: const InputDecoration(
++                  labelText: 'Payment frequency (optional)',
++                  border: OutlineInputBorder(),
++                ),
++                items: _frequencies
++                    .map((f) => DropdownMenuItem(value: f, child: Text(f[0].toUpperCase() + f.substring(1))))
++                    .toList(),
++                onChanged: (value) => setState(() => _paymentFrequency = value),
++              ),
++              const SizedBox(height: 16),
++              ListTile(
++                contentPadding: EdgeInsets.zero,
++                title: const Text('Next due date (optional)'),
++                subtitle: Text(_dueDate == null ? 'No due date set' : _formatDate(_dueDate!)),
++                trailing: const Icon(Icons.calendar_today_outlined),
++                onTap: _pickDueDate,
++              ),
++              const SizedBox(height: 24),
++              if (_errorMessage != null) ...[
++                Text(_errorMessage!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
++                const SizedBox(height: 12),
++              ],
++              FilledButton(
++                onPressed: _isSaving ? null : _save,
++                child: _isSaving
++                    ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
++                    : const Text('Add debt'),
++              ),
++            ],
++          ),
++        ),
++      ),
++    );
++  }
++}
+diff --git a/lib/features/debts/debt_detail_screen.dart b/lib/features/debts/debt_detail_screen.dart
+new file mode 100644
+index 0000000..fb53d2a
+--- /dev/null
++++ b/lib/features/debts/debt_detail_screen.dart
+@@ -0,0 +1,240 @@
++import 'package:flutter/material.dart';
++
++import 'debts_repository.dart';
++
++class DebtDetailScreen extends StatefulWidget {
++  const DebtDetailScreen({super.key, required this.debt, required this.clerkUserId, required this.currency});
++
++  final DebtRecord debt;
++  final String clerkUserId;
++  final String currency;
++
++  @override
++  State<DebtDetailScreen> createState() => _DebtDetailScreenState();
++}
++
++class _DebtDetailScreenState extends State<DebtDetailScreen> {
++  late DebtRecord _debt;
++  List<DebtPaymentRecord> _payments = [];
++  bool _isLoading = true;
++  String? _errorMessage;
++
++  @override
++  void initState() {
++    super.initState();
++    _debt = widget.debt;
++    _loadPayments();
++  }
++
++  Future<void> _loadPayments() async {
++    setState(() => _isLoading = true);
++    try {
++      final payments = await DebtsRepository.fetchPayments(debtId: _debt.id, clerkUserId: widget.clerkUserId);
++      if (!mounted) return;
++      setState(() {
++        _payments = payments;
++        _isLoading = false;
++      });
++    } catch (e) {
++      debugPrint('LOAD FAILED (debt payments): $e');
++      if (!mounted) return;
++      setState(() {
++        _isLoading = false;
++        _errorMessage = "Couldn't load this debt's payment history.";
++      });
++    }
++  }
++
++  Future<void> _openRecordPaymentDialog() async {
++    final amountController = TextEditingController(
++      text: _debt.minimumPayment != null ? _debt.minimumPayment!.toStringAsFixed(0) : '',
++    );
++
++    final amount = await showDialog<num>(
++      context: context,
++      builder: (context) => AlertDialog(
++        title: const Text('Record a payment'),
++        content: TextField(
++          controller: amountController,
++          autofocus: true,
++          decoration: InputDecoration(labelText: 'Amount', prefixText: '${widget.currency} '),
++          keyboardType: const TextInputType.numberWithOptions(decimal: true),
++        ),
++        actions: [
++          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
++          FilledButton(
++            onPressed: () => Navigator.pop(context, num.tryParse(amountController.text.trim())),
++            child: const Text('Confirm'),
++          ),
++        ],
++      ),
++    );
++
++    if (amount == null || amount <= 0) return;
++
++    try {
++      final updated = await DebtsRepository.recordPayment(
++        debtId: _debt.id,
++        clerkUserId: widget.clerkUserId,
++        amount: amount,
++      );
++      if (!mounted) return;
++      setState(() => _debt = updated);
++      _loadPayments();
++    } catch (e) {
++      debugPrint('RECORD PAYMENT FAILED: $e');
++      if (!mounted) return;
++      ScaffoldMessenger.of(context).showSnackBar(
++        const SnackBar(content: Text("Couldn't record that payment. Try again.")),
++      );
++    }
++  }
++
++  Future<void> _confirmDelete() async {
++    final confirmed = await showDialog<bool>(
++      context: context,
++      builder: (context) => AlertDialog(
++        title: const Text('Delete this debt?'),
++        content: const Text('This permanently deletes the debt and its payment history.'),
++        actions: [
++          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
++          TextButton(
++            onPressed: () => Navigator.pop(context, true),
++            child: const Text('Delete', style: TextStyle(color: Colors.red)),
++          ),
++        ],
++      ),
++    );
++    if (confirmed != true) return;
++
++    try {
++      await DebtsRepository.deleteDebt(debtId: _debt.id, clerkUserId: widget.clerkUserId);
++      if (!mounted) return;
++      Navigator.of(context).pop(true);
++    } catch (e) {
++      debugPrint('DELETE FAILED (debt): $e');
++      if (!mounted) return;
++      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Couldn't delete this debt.")));
++    }
++  }
++
++  String _formatDate(DateTime date) =>
++      '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
++
++  String _money(num value) => '${widget.currency} ${value.toStringAsFixed(0)}';
++
++  /// A simple linear estimate (balance ÷ minimum payment), deliberately not
++  /// interest-aware. An accurate amortization estimate needs the compounding
++  /// period and payment-vs-interest relationship modelled carefully — worth
++  /// doing as its own reviewed slice rather than folding untested financial
++  /// math into this screen.
++  int? get _estimatedMonthsRemaining {
++    final payment = _debt.minimumPayment;
++    if (payment == null || payment <= 0 || _debt.currentBalance <= 0) return null;
++    return (_debt.currentBalance / payment).ceil();
++  }
++
++  @override
++  Widget build(BuildContext context) {
++    final monthsRemaining = _estimatedMonthsRemaining;
++
++    return Scaffold(
++      appBar: AppBar(
++        title: Text(_debt.loanName),
++        actions: [
++          IconButton(onPressed: _confirmDelete, icon: const Icon(Icons.delete_outline)),
++        ],
++      ),
++      body: SafeArea(
++        child: RefreshIndicator(
++          onRefresh: _loadPayments,
++          child: ListView(
++            padding: const EdgeInsets.all(20),
++            children: [
++              Card(
++                child: Padding(
++                  padding: const EdgeInsets.all(20),
++                  child: Column(
++                    crossAxisAlignment: CrossAxisAlignment.start,
++                    children: [
++                      if (_debt.lender != null) ...[
++                        Text(_debt.lender!, style: Theme.of(context).textTheme.bodyMedium),
++                        const SizedBox(height: 4),
++                      ],
++                      Text(
++                        _debt.isPaidOff ? 'Paid off' : '${_money(_debt.currentBalance)} remaining',
++                        style: Theme.of(context).textTheme.titleLarge,
++                      ),
++                      const SizedBox(height: 12),
++                      ClipRRect(
++                        borderRadius: BorderRadius.circular(4),
++                        child: LinearProgressIndicator(value: _debt.percentPaidOff, minHeight: 10),
++                      ),
++                      const SizedBox(height: 8),
++                      Text(
++                        '${(_debt.percentPaidOff * 100).toStringAsFixed(0)}% paid off '
++                        '(${_money(_debt.totalPaid)} of ${_money(_debt.originalAmount)})',
++                      ),
++                      if (_debt.interestRate != null) ...[
++                        const SizedBox(height: 4),
++                        Text('Interest rate: ${_debt.interestRate}% per year'),
++                      ],
++                      if (_debt.dueDate != null) ...[
++                        const SizedBox(height: 4),
++                        Text('Next due: ${_formatDate(_debt.dueDate!)}'),
++                      ],
++                      const SizedBox(height: 12),
++                      if (_debt.isPaidOff)
++                        Text(
++                          "This debt is fully paid off.",
++                          style: TextStyle(fontWeight: FontWeight.w600, color: Colors.green.shade700),
++                        )
++                      else if (monthsRemaining != null)
++                        Text(
++                          'At your minimum payment, roughly $monthsRemaining month'
++                          '${monthsRemaining == 1 ? '' : 's'} remaining. '
++                          'This estimate ignores interest — actual payoff time will be longer.',
++                          style: const TextStyle(fontStyle: FontStyle.italic),
++                        )
++                      else
++                        const Text('Add a minimum payment amount to estimate time remaining.'),
++                    ],
++                  ),
++                ),
++              ),
++              const SizedBox(height: 16),
++              if (!_debt.isPaidOff)
++                FilledButton.icon(
++                  onPressed: _openRecordPaymentDialog,
++                  icon: const Icon(Icons.add),
++                  label: const Text('Record a payment'),
++                ),
++              const SizedBox(height: 24),
++              Text('Payment history', style: Theme.of(context).textTheme.titleMedium),
++              const SizedBox(height: 8),
++              if (_isLoading)
++                const Padding(
++                  padding: EdgeInsets.symmetric(vertical: 24),
++                  child: Center(child: CircularProgressIndicator()),
++                )
++              else if (_errorMessage != null)
++                Text(_errorMessage!)
++              else if (_payments.isEmpty)
++                const Padding(
++                  padding: EdgeInsets.symmetric(vertical: 16),
++                  child: Text('No payments recorded yet.'),
++                )
++              else
++                ..._payments.map((p) => ListTile(
++                      contentPadding: EdgeInsets.zero,
++                      leading: const Icon(Icons.check_circle_outline, color: Colors.green),
++                      title: Text(_money(p.amount)),
++                      trailing: Text(_formatDate(p.paymentDate)),
++                    )),
++            ],
++          ),
++        ),
++      ),
++    );
++  }
++}
+diff --git a/lib/features/debts/debts_repository.dart b/lib/features/debts/debts_repository.dart
+new file mode 100644
+index 0000000..7a40f34
+--- /dev/null
++++ b/lib/features/debts/debts_repository.dart
+@@ -0,0 +1,180 @@
++import '../../core/services/supabase_service.dart';
++
++class DebtRecord {
++  DebtRecord({
++    required this.id,
++    required this.loanName,
++    required this.originalAmount,
++    required this.currentBalance,
++    required this.createdAt,
++    this.lender,
++    this.interestRate,
++    this.minimumPayment,
++    this.paymentFrequency,
++    this.dueDate,
++    this.startDate,
++    this.expectedPayoffDate,
++  });
++
++  final String id;
++  final String loanName;
++  final String? lender;
++  final num originalAmount;
++  final num currentBalance;
++  final num? interestRate;
++  final num? minimumPayment;
++  final String? paymentFrequency; // 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'yearly'
++  final DateTime? dueDate;
++  final DateTime? startDate;
++  final DateTime? expectedPayoffDate;
++  final DateTime createdAt;
++
++  bool get isPaidOff => currentBalance <= 0;
++
++  num get totalPaid => (originalAmount - currentBalance).clamp(0, originalAmount);
++
++  double get percentPaidOff => originalAmount <= 0 ? 0 : (totalPaid / originalAmount).clamp(0, 1).toDouble();
++
++  factory DebtRecord.fromMap(Map<String, dynamic> map) {
++    return DebtRecord(
++      id: map['id'].toString(),
++      loanName: map['loan_name'] as String,
++      lender: map['lender'] as String?,
++      originalAmount: (map['original_amount'] as num?) ?? 0,
++      currentBalance: (map['current_balance'] as num?) ?? 0,
++      interestRate: map['interest_rate'] as num?,
++      minimumPayment: map['minimum_payment'] as num?,
++      paymentFrequency: map['payment_frequency'] as String?,
++      dueDate: map['due_date'] != null ? DateTime.parse(map['due_date'].toString()) : null,
++      startDate: map['start_date'] != null ? DateTime.parse(map['start_date'].toString()) : null,
++      expectedPayoffDate:
++          map['expected_payoff_date'] != null ? DateTime.parse(map['expected_payoff_date'].toString()) : null,
++      createdAt: DateTime.parse(map['created_at'].toString()),
++    );
++  }
++}
++
++class DebtPaymentRecord {
++  DebtPaymentRecord({
++    required this.id,
++    required this.amount,
++    required this.paymentDate,
++    required this.createdAt,
++    this.principalAmount,
++    this.interestAmount,
++  });
++
++  final String id;
++  final num amount;
++  final num? principalAmount;
++  final num? interestAmount;
++  final DateTime paymentDate;
++  final DateTime createdAt;
++
++  factory DebtPaymentRecord.fromMap(Map<String, dynamic> map) {
++    return DebtPaymentRecord(
++      id: map['id'].toString(),
++      amount: (map['amount'] as num?) ?? 0,
++      principalAmount: map['principal_amount'] as num?,
++      interestAmount: map['interest_amount'] as num?,
++      paymentDate: DateTime.parse(map['payment_date'].toString()),
++      createdAt: DateTime.parse(map['created_at'].toString()),
++    );
++  }
++}
++
++/// Direct, RLS-protected Supabase calls. Every write explicitly sets
++/// `user_id` to the caller's own Clerk user id; RLS independently enforces
++/// that this can't be spoofed to another user's id.
++class DebtsRepository {
++  static Future<List<DebtRecord>> fetchDebts({required String clerkUserId}) async {
++    final rows = await SupabaseService.client
++        .from('debts')
++        .select()
++        .eq('user_id', clerkUserId)
++        .order('created_at', ascending: false);
++
++    return rows.map((row) => DebtRecord.fromMap(row)).toList();
++  }
++
++  static Future<List<DebtPaymentRecord>> fetchPayments({
++    required String debtId,
++    required String clerkUserId,
++  }) async {
++    final rows = await SupabaseService.client
++        .from('debt_payments')
++        .select()
++        .eq('debt_id', debtId)
++        .eq('user_id', clerkUserId)
++        .order('payment_date', ascending: false);
++
++    return rows.map((row) => DebtPaymentRecord.fromMap(row)).toList();
++  }
++
++  static Future<DebtRecord> createDebt({
++    required String clerkUserId,
++    required String loanName,
++    required num originalAmount,
++    num? currentBalance,
++    String? lender,
++    num? interestRate,
++    num? minimumPayment,
++    String? paymentFrequency,
++    DateTime? dueDate,
++    DateTime? startDate,
++    DateTime? expectedPayoffDate,
++  }) async {
++    final row = await SupabaseService.client
++        .from('debts')
++        .insert({
++          'user_id': clerkUserId,
++          'loan_name': loanName,
++          'lender': lender,
++          'original_amount': originalAmount,
++          // Defaults to the full original amount — a brand new debt hasn't
++          // had anything paid off yet, unless the user tells us otherwise.
++          'current_balance': currentBalance ?? originalAmount,
++          'interest_rate': interestRate,
++          'minimum_payment': minimumPayment,
++          'payment_frequency': paymentFrequency,
++          'due_date': dueDate?.toIso8601String().split('T').first,
++          'start_date': startDate?.toIso8601String().split('T').first,
++          'expected_payoff_date': expectedPayoffDate?.toIso8601String().split('T').first,
++        })
++        .select()
++        .single();
++
++    return DebtRecord.fromMap(row);
++  }
++
++  /// Atomically records a payment and reduces the debt's running balance —
++  /// see the `add_debt_payment` Postgres function for why this is one RPC
++  /// call rather than two separate writes from here.
++  static Future<DebtRecord> recordPayment({
++    required String debtId,
++    required String clerkUserId,
++    required num amount,
++    num? principalAmount,
++    num? interestAmount,
++    DateTime? paymentDate,
++  }) async {
++    final row = await SupabaseService.client.rpc(
++      'add_debt_payment',
++      params: {
++        'p_debt_id': debtId,
++        'p_user_id': clerkUserId,
++        'p_amount': amount,
++        'p_principal_amount': principalAmount,
++        'p_interest_amount': interestAmount,
++        'p_payment_date': (paymentDate ?? DateTime.now()).toIso8601String().split('T').first,
++      },
++    );
++
++    return DebtRecord.fromMap(row as Map<String, dynamic>);
++  }
++
++  static Future<void> deleteDebt({required String debtId, required String clerkUserId}) async {
++    // debt_payments rows are removed automatically via ON DELETE CASCADE.
++    await SupabaseService.client.from('debts').delete().eq('id', debtId).eq('user_id', clerkUserId);
++  }
++}
+diff --git a/lib/features/debts/debts_screen.dart b/lib/features/debts/debts_screen.dart
+new file mode 100644
+index 0000000..1a26f0c
+--- /dev/null
++++ b/lib/features/debts/debts_screen.dart
+@@ -0,0 +1,164 @@
++import 'package:flutter/material.dart';
++
++import 'create_debt_screen.dart';
++import 'debt_detail_screen.dart';
++import 'debts_repository.dart';
++
++class DebtsScreen extends StatefulWidget {
++  const DebtsScreen({super.key, required this.clerkUserId, required this.currency});
++
++  final String clerkUserId;
++  final String currency;
++
++  @override
++  State<DebtsScreen> createState() => _DebtsScreenState();
++}
++
++class _DebtsScreenState extends State<DebtsScreen> {
++  List<DebtRecord> _debts = [];
++  bool _isLoading = true;
++  String? _errorMessage;
++
++  @override
++  void initState() {
++    super.initState();
++    _load();
++  }
++
++  Future<void> _load() async {
++    setState(() {
++      _isLoading = true;
++      _errorMessage = null;
++    });
++    try {
++      final debts = await DebtsRepository.fetchDebts(clerkUserId: widget.clerkUserId);
++      if (!mounted) return;
++      setState(() {
++        _debts = debts;
++        _isLoading = false;
++      });
++    } catch (e) {
++      debugPrint('LOAD FAILED (debts): $e');
++      if (!mounted) return;
++      setState(() {
++        _isLoading = false;
++        _errorMessage = "Couldn't load your debts. Check your connection and try again.";
++      });
++    }
++  }
++
++  Future<void> _openCreate() async {
++    final created = await Navigator.of(context).push<bool>(
++      MaterialPageRoute(
++        builder: (_) => CreateDebtScreen(clerkUserId: widget.clerkUserId, currency: widget.currency),
++      ),
++    );
++    if (created == true) _load();
++  }
++
++  Future<void> _openDetail(DebtRecord debt) async {
++    await Navigator.of(context).push(
++      MaterialPageRoute(
++        builder: (_) => DebtDetailScreen(debt: debt, clerkUserId: widget.clerkUserId, currency: widget.currency),
++      ),
++    );
++    _load();
++  }
++
++  String _money(num value) => '${widget.currency} ${value.toStringAsFixed(0)}';
++
++  @override
++  Widget build(BuildContext context) {
++    return Scaffold(
++      appBar: AppBar(title: const Text('Debts')),
++      floatingActionButton: FloatingActionButton.extended(
++        heroTag: 'debts-fab',
++        onPressed: _openCreate,
++        icon: const Icon(Icons.add),
++        label: const Text('New debt'),
++      ),
++      body: SafeArea(
++        child: RefreshIndicator(
++          onRefresh: _load,
++          child: Builder(builder: (context) {
++            if (_isLoading) {
++              return const Center(child: CircularProgressIndicator());
++            }
++            if (_errorMessage != null) {
++              return Center(
++                child: Padding(
++                  padding: const EdgeInsets.all(24),
++                  child: Column(
++                    mainAxisSize: MainAxisSize.min,
++                    children: [
++                      Text(_errorMessage!, textAlign: TextAlign.center),
++                      const SizedBox(height: 16),
++                      FilledButton(onPressed: _load, child: const Text('Try again')),
++                    ],
++                  ),
++                ),
++              );
++            }
++            if (_debts.isEmpty) {
++              return LayoutBuilder(
++                builder: (context, constraints) => SingleChildScrollView(
++                  physics: const AlwaysScrollableScrollPhysics(),
++                  child: ConstrainedBox(
++                    constraints: BoxConstraints(minHeight: constraints.maxHeight),
++                    child: Center(
++                      child: Padding(
++                        padding: const EdgeInsets.all(24),
++                        child: Column(
++                          mainAxisSize: MainAxisSize.min,
++                          children: [
++                            const Text(
++                              "You don't have any debts tracked yet.",
++                              textAlign: TextAlign.center,
++                              style: TextStyle(fontWeight: FontWeight.w600),
++                            ),
++                            const SizedBox(height: 16),
++                            FilledButton.icon(
++                              onPressed: _openCreate,
++                              icon: const Icon(Icons.add),
++                              label: const Text('Add a debt'),
++                            ),
++                          ],
++                        ),
++                      ),
++                    ),
++                  ),
++                ),
++              );
++            }
++            return ListView.separated(
++              padding: const EdgeInsets.all(20),
++              itemCount: _debts.length,
++              separatorBuilder: (_, __) => const SizedBox(height: 12),
++              itemBuilder: (context, index) {
++                final debt = _debts[index];
++                return Card(
++                  child: ListTile(
++                    onTap: () => _openDetail(debt),
++                    title: Text(debt.loanName),
++                    subtitle: Text(
++                      debt.isPaidOff
++                          ? 'Paid off'
++                          : '${_money(debt.currentBalance)} of ${_money(debt.originalAmount)} remaining',
++                    ),
++                    trailing: SizedBox(
++                      width: 56,
++                      child: ClipRRect(
++                        borderRadius: BorderRadius.circular(4),
++                        child: LinearProgressIndicator(value: debt.percentPaidOff, minHeight: 6),
++                      ),
++                    ),
++                  ),
++                );
++              },
++            );
++          }),
++        ),
++      ),
++    );
++  }
++}
+diff --git a/lib/features/profile/profile_screen.dart b/lib/features/profile/profile_screen.dart
+index aefd49d..3ca8295 100644
+--- a/lib/features/profile/profile_screen.dart
++++ b/lib/features/profile/profile_screen.dart
+@@ -1,16 +1,21 @@
+ import 'package:clerk_flutter/clerk_flutter.dart';
+ import 'package:flutter/material.dart';
++import 'package:flutter_riverpod/flutter_riverpod.dart';
++import '../../core/providers/profile_provider.dart';
+ import '../../core/services/auth_identity_service.dart';
+ import '../../app/theme/app_colors.dart';
+ import '../../ui/design_system/components/app_card.dart';
+ import '../../ui/design_system/components/app_button.dart';
++import '../debts/debts_screen.dart';
+ 
+-class ProfileScreen extends StatelessWidget {
++class ProfileScreen extends ConsumerWidget {
+   const ProfileScreen({super.key});
+ 
+   @override
+-  Widget build(BuildContext context) {
++  Widget build(BuildContext context, WidgetRef ref) {
+     final auth = ClerkAuth.of(context, listen: true);
++    final clerkUserId = AuthIdentityService.currentClerkUserId(auth) ?? '';
++    final currency = ref.watch(profileControllerProvider).valueOrNull?.currency ?? 'KES';
+     final email = AuthIdentityService.currentClerkEmail(auth) ?? 'No email';
+     final user = auth.client.user;
+     final name = (user != null)
+@@ -103,6 +108,20 @@ class ProfileScreen extends StatelessWidget {
+                 padding: const EdgeInsets.all(16.0),
+                 child: Column(
+                   children: [
++                    _buildSettingsTile(
++                      context,
++                      icon: Icons.account_balance_wallet_outlined,
++                      title: 'Debts',
++                      color: Colors.redAccent,
++                      onTap: () {
++                        Navigator.of(context).push(
++                          MaterialPageRoute(
++                            builder: (_) => DebtsScreen(clerkUserId: clerkUserId, currency: currency),
++                          ),
++                        );
++                      },
++                    ),
++                    const Divider(height: 1, color: Color(0xFFEEEEEE)),
+                     _buildSettingsTile(
+                       context,
+                       icon: Icons.shield_outlined,
+@@ -174,6 +193,7 @@ class ProfileScreen extends StatelessWidget {
+     required IconData icon,
+     required String title,
+     required Color color,
++    VoidCallback? onTap,
+   }) {
+     return ListTile(
+       leading: Container(
+@@ -194,8 +214,8 @@ class ProfileScreen extends StatelessWidget {
+         ),
+       ),
+       trailing: const Icon(Icons.chevron_right, color: Colors.black26, size: 18),
+-      onTap: () {
+-        // Can expand in future
++      onTap: onTap ?? () {
++        // Account Security / Notifications / Appearance: not implemented yet.
+       },
+     );
+   }
+diff --git a/supabase/migrations/20260806_01_missing_rpc_functions_and_debt_payments.sql b/supabase/migrations/20260806_01_missing_rpc_functions_and_debt_payments.sql
+new file mode 100644
+index 0000000..7b9d161
+--- /dev/null
++++ b/supabase/migrations/20260806_01_missing_rpc_functions_and_debt_payments.sql
+@@ -0,0 +1,147 @@
++-- This migration fixes two pre-existing bugs and adds one new function:
++--
++-- 1. `get_budget_progress` was called from budgets_repository.dart but was
++--    never actually created — every budget detail view has been failing
++--    with "function does not exist".
++-- 2. `add_goal_contribution` was called from savings_goals_repository.dart
++--    with the same problem — adding/withdrawing money on a goal has been
++--    failing the same way.
++-- 3. `add_debt_payment` is new, for the debt management feature, following
++--    the same pattern as (2): atomically insert the payment row and update
++--    the running balance in one transaction, instead of two separate
++--    round-trips from the client that could partially fail.
++--
++-- All three use SECURITY INVOKER (the default) so the existing RLS policies
++-- on the underlying tables still apply inside the function — a mismatched
++-- p_user_id can't be used to read or write someone else's data, RLS blocks
++-- it the same way it would a direct query.
++
++create or replace function public.get_budget_progress(p_budget_id uuid, p_user_id text)
++returns table (
++  category_id uuid,
++  category_name text,
++  category_icon text,
++  category_color text,
++  allocated_amount numeric,
++  spent_amount numeric
++)
++language sql
++security invoker
++stable
++as $$
++  select
++    bc.category_id,
++    c.name as category_name,
++    c.icon as category_icon,
++    c.color as category_color,
++    bc.allocated_amount,
++    coalesce((
++      select sum(t.amount)
++      from public.transactions t
++      where t.category_id = bc.category_id
++        and t.user_id = p_user_id
++        and t.type = 'expense'
++        and t.transaction_date >= b.period_start
++        and t.transaction_date <= b.period_end
++    ), 0) as spent_amount
++  from public.budget_categories bc
++  join public.budgets b on b.id = bc.budget_id
++  join public.categories c on c.id = bc.category_id
++  where bc.budget_id = p_budget_id
++    and bc.user_id = p_user_id
++    and b.user_id = p_user_id;
++$$;
++
++grant execute on function public.get_budget_progress(uuid, text) to authenticated;
++
++create or replace function public.add_goal_contribution(
++  p_goal_id uuid,
++  p_user_id text,
++  p_amount numeric,
++  p_contribution_type text,
++  p_note text default null
++)
++returns public.savings_goals
++language plpgsql
++security invoker
++as $$
++declare
++  v_goal public.savings_goals;
++begin
++  if p_contribution_type not in ('deposit', 'withdrawal') then
++    raise exception 'Invalid contribution_type: %', p_contribution_type;
++  end if;
++
++  select * into v_goal
++  from public.savings_goals
++  where id = p_goal_id and user_id = p_user_id
++  for update;
++
++  if not found then
++    raise exception 'Goal not found.';
++  end if;
++
++  if p_contribution_type = 'withdrawal' and p_amount > v_goal.current_amount then
++    raise exception 'Cannot withdraw more than the current goal balance.';
++  end if;
++
++  insert into public.goal_contributions (goal_id, user_id, amount, contribution_type, note)
++  values (p_goal_id, p_user_id, p_amount, p_contribution_type, p_note);
++
++  update public.savings_goals
++  set current_amount = current_amount + (case when p_contribution_type = 'deposit' then p_amount else -p_amount end),
++      updated_at = now()
++  where id = p_goal_id and user_id = p_user_id
++  returning * into v_goal;
++
++  return v_goal;
++end;
++$$;
++
++grant execute on function public.add_goal_contribution(uuid, text, numeric, text, text) to authenticated;
++
++create or replace function public.add_debt_payment(
++  p_debt_id uuid,
++  p_user_id text,
++  p_amount numeric,
++  p_principal_amount numeric default null,
++  p_interest_amount numeric default null,
++  p_payment_date date default current_date
++)
++returns public.debts
++language plpgsql
++security invoker
++as $$
++declare
++  v_debt public.debts;
++  v_principal numeric;
++begin
++  select * into v_debt
++  from public.debts
++  where id = p_debt_id and user_id = p_user_id
++  for update;
++
++  if not found then
++    raise exception 'Debt not found.';
++  end if;
++
++  -- If the payment isn't broken down into principal/interest, assume the
++  -- whole amount reduces the balance. A payment can't reduce the balance
++  -- below zero — an overpayment just closes it out at zero rather than
++  -- erroring, since overpaying a debt isn't a user mistake worth blocking.
++  v_principal := least(coalesce(p_principal_amount, p_amount), v_debt.current_balance);
++
++  insert into public.debt_payments (debt_id, user_id, amount, principal_amount, interest_amount, payment_date)
++  values (p_debt_id, p_user_id, p_amount, p_principal_amount, p_interest_amount, p_payment_date);
++
++  update public.debts
++  set current_balance = current_balance - v_principal,
++      updated_at = now()
++  where id = p_debt_id and user_id = p_user_id
++  returning * into v_debt;
++
++  return v_debt;
++end;
++$$;
++
++grant execute on function public.add_debt_payment(uuid, text, numeric, numeric, numeric, date) to authenticated;
