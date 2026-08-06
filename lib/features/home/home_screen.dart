@@ -28,7 +28,7 @@ class _HomeScreenState extends State<HomeScreen> {
   DashboardSummary? _summary;
   List<TransactionRecord> _recentTransactions = [];
   List<BudgetCategoryProgress> _budgetCategoryProgress = [];
-  double _budgetProgressPercent = 0.68;
+  double _budgetProgressPercent = 0.0;
   bool _isLoading = true;
   String? _errorMessage;
   bool _obscureBalance = false;
@@ -57,7 +57,7 @@ class _HomeScreenState extends State<HomeScreen> {
       final budgets = results[2] as List<BudgetRecord>;
 
       List<BudgetCategoryProgress> progress = [];
-      double percent = 0.68;
+      double percent = 0.0;
 
       if (budgets.isNotEmpty) {
         progress = await BudgetsRepository.fetchBudgetProgress(
@@ -155,25 +155,16 @@ class _HomeScreenState extends State<HomeScreen> {
           child: ListView(
             padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
             children: [
-              // 1. Top Header Bar
               _buildHeader(context, name, dateString),
               const SizedBox(height: 20),
-
-              // 2. Search Bar Pill
               _buildSearchBar(context),
               const SizedBox(height: 20),
-
-              // 3. Purple Claymorphic Gradient Card
               _buildBalanceCard(context, summary),
               const SizedBox(height: 24),
-
-              // 4. Budget Categories Horizontal List
               _buildBudgetCategories(context),
               const SizedBox(height: 24),
-
-              // 5. Recent Transactions
               _buildRecentTransactions(context),
-              const SizedBox(height: 80), // extra padding for bottom navigation bar
+              const SizedBox(height: 80),
             ],
           ),
         ),
@@ -185,7 +176,6 @@ class _HomeScreenState extends State<HomeScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        // Hamburger Menu Card
         GestureDetector(
           onTap: () {
             HapticFeedback.lightImpact();
@@ -210,8 +200,6 @@ class _HomeScreenState extends State<HomeScreen> {
             child: const Icon(Icons.menu_rounded, color: Colors.black87),
           ),
         ),
-
-        // Title Greetings
         Expanded(
           child: Column(
             children: [
@@ -263,8 +251,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
         ),
-
-        // Notification Bell Card
         GestureDetector(
           onTap: () {
             HapticFeedback.lightImpact();
@@ -360,7 +346,6 @@ class _HomeScreenState extends State<HomeScreen> {
     final expensesText = _formatAmount(summary.monthExpenses);
     final savingsText = _formatAmount(summary.monthSavings);
 
-    // Calculate left this month
     final leftThisMonth = summary.monthIncome - summary.monthExpenses;
     final leftThisMonthText = _formatAmount(leftThisMonth > 0 ? leftThisMonth : 0);
 
@@ -373,13 +358,11 @@ class _HomeScreenState extends State<HomeScreen> {
         padding: const EdgeInsets.all(20.0),
         child: Row(
           children: [
-            // Left content Column
             Expanded(
               flex: 3,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Total Balance Eye row
                   Row(
                     children: [
                       const Text(
@@ -409,7 +392,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     ],
                   ),
                   const SizedBox(height: 6),
-                  // Balance Text
                   Text(
                     balanceText,
                     style: const TextStyle(
@@ -420,8 +402,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-
-                  // Income / Expenses / Savings Capsules
                   _buildBalanceSubItem(
                     icon: Icons.arrow_upward_rounded,
                     iconBg: const Color(0xFF10B981),
@@ -443,32 +423,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     amount: savingsText,
                   ),
                   const SizedBox(height: 16),
-
-                  // Better than last month and Wallet badge
-                  Row(
-                    children: [
-                      const Text(
-                        '↑ 8%',
-                        style: TextStyle(
-                          fontFamily: 'Inter',
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.lightGreenAccent,
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      const Text(
-                        'better than last month',
-                        style: TextStyle(
-                          fontFamily: 'Inter',
-                          fontSize: 11,
-                          color: Colors.white70,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  // Left this month badge
                   Container(
                     decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.12),
@@ -495,8 +449,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
             ),
-
-            // Right Chart Column
             Expanded(
               flex: 2,
               child: Column(
@@ -610,7 +562,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             if (displayProgress.isNotEmpty)
               GestureDetector(
-                onTap: () => widget.onTabChanged(2), // Budgets tab
+                onTap: () => widget.onTabChanged(2),
                 child: const Text(
                   'View all',
                   style: TextStyle(
@@ -636,7 +588,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(height: 12),
                 GestureDetector(
-                  onTap: () => widget.onTabChanged(2), // Budgets tab
+                  onTap: () => widget.onTabChanged(2),
                   child: const Text(
                     'Create a budget',
                     style: TextStyle(
@@ -667,7 +619,6 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildCategoryCard(BuildContext context, BudgetCategoryProgress progress) {
-    // Parse color
     Color themeColor = AppColors.primary;
     if (progress.categoryColor != null) {
       try {
@@ -675,7 +626,6 @@ class _HomeScreenState extends State<HomeScreen> {
       } catch (_) {}
     }
 
-    // Map icon
     IconData iconData = Icons.category_rounded;
     final iconName = progress.categoryIcon ?? '';
     if (iconName.contains('food') || iconName.contains('burger')) {
@@ -701,7 +651,6 @@ class _HomeScreenState extends State<HomeScreen> {
           crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            // Icon circle
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
@@ -710,7 +659,6 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               child: Icon(iconData, color: themeColor, size: 20),
             ),
-            // Title
             Text(
               progress.categoryName,
               style: const TextStyle(
@@ -720,7 +668,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 color: Colors.black87,
               ),
             ),
-            // Amount
             Text(
               _formatAmount(progress.allocatedAmount),
               style: const TextStyle(
@@ -729,7 +676,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 color: Colors.black54,
               ),
             ),
-            // Progress Bar & Percentage
             Column(
               children: [
                 ClipRRect(
@@ -789,7 +735,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
             GestureDetector(
-              onTap: () => widget.onTabChanged(1), // Transactions tab
+              onTap: () => widget.onTabChanged(1),
               child: const Text(
                 'View all',
                 style: TextStyle(
@@ -830,7 +776,6 @@ class _HomeScreenState extends State<HomeScreen> {
     final sign = isIncome ? '+' : '-';
     final amountColor = isIncome ? const Color(0xFF10B981) : Colors.redAccent;
 
-    // Map description to mock styling
     Color bgCircleColor = AppColors.primary;
     IconData icon = Icons.receipt_long_rounded;
 
