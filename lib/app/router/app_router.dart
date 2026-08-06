@@ -22,7 +22,7 @@ final routerProvider = Provider<GoRouter>((ref) {
     refreshListenable: ref.watch(routerRefreshProvider),
     redirect: (context, state) {
       final hasClerkAuth = context.findAncestorWidgetOfExactType<ClerkAuth>() != null;
-      if (!hasClerkAuth) return null; // matches the pre-existing "Welcome" fallback
+      if (!hasClerkAuth) return null;
 
       final auth = ClerkAuth.of(context, listen: false);
       final isAuthed = AuthIdentityService.isAuthenticated(auth);
@@ -40,9 +40,6 @@ final routerProvider = Provider<GoRouter>((ref) {
         error: (_, __) => loc == '/loading' ? null : '/loading',
         data: (profile) {
           if (profile == null) {
-            // First time we've seen this authenticated user: kick off the
-            // load. Guarded by the `data: null` check, so it only fires once
-            // — subsequent redirects see AsyncLoading above and stop here.
             Future.microtask(() async {
               final token = await AuthIdentityService.currentSessionToken(auth);
               if (token != null) {
@@ -119,9 +116,16 @@ final routerProvider = Provider<GoRouter>((ref) {
                 return HomeScreen(
                   clerkUserId: profile?.clerkUserId ?? '',
                   currency: (profile?.currency ?? '').isEmpty ? 'KES' : profile!.currency!,
-                  onTabChanged: (index) => const [
-                    '/home', '/transactions', '/budgets', '/goals', '/profile',
-                  ][index].let((path) => context.go(path)),
+                  onTabChanged: (index) {
+                    const paths = [
+                      '/home',
+                      '/transactions',
+                      '/budgets',
+                      '/goals',
+                      '/profile',
+                    ];
+                    context.go(paths[index]);
+                  },
                 );
               }),
             ),
@@ -180,7 +184,11 @@ class _LoadingScaffold extends StatelessWidget {
         body: Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
-            children: [const CircularProgressIndicator(), const SizedBox(height: 16), Text(message)],
+            children: [
+              const CircularProgressIndicator(),
+              const SizedBox(height: 16),
+              Text(message),
+            ],
           ),
         ),
       );
