@@ -67,4 +67,4 @@ class AppCard extends StatelessWidget {
       ),
     );
   }
-}
+}

@@ -10,7 +10,6 @@ class RootNavigationScreen extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
 
   @override
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -76,4 +75,4 @@ class RootNavigationScreen extends StatelessWidget {
       ),
     );
   }
-}
+}
