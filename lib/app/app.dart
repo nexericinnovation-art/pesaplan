@@ -18,8 +18,7 @@ class MyApp extends ConsumerWidget {
           title: 'Pesaplan',
           debugShowCheckedModeBanner: false,
           theme: AppTheme.lightClayTheme,
-          darkTheme: AppTheme.darkClayTheme,
-          themeMode: ThemeMode.system,
+          themeMode: ThemeMode.light,
           routerConfig: router,
         );
 
