@@ -1,5 +1,6 @@
 import 'package:clerk_flutter/clerk_flutter.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'app/app.dart';
 import 'app/config/app_config.dart';
@@ -21,10 +22,12 @@ Future<void> main() async {
 
   await SupabaseService.initialize();
 
-  runApp(
-    ClerkAuth(
-      config: AppConfig.clerkConfig,
-      child: const MyApp(),
+runApp(
+    ProviderScope(
+      child: ClerkAuth(
+        config: AppConfig.clerkConfig,
+        child: const MyApp(),
+      ),
     ),
   );
 }
