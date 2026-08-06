@@ -7,6 +7,7 @@ import '../../app/theme/app_colors.dart';
 import '../../ui/design_system/components/app_card.dart';
 import '../../ui/design_system/components/app_button.dart';
 import '../debts/debts_screen.dart';
+import 'coming_soon_screen.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -127,6 +128,14 @@ class ProfileScreen extends ConsumerWidget {
                       icon: Icons.shield_outlined,
                       title: 'Account Security',
                       color: Colors.blueAccent,
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const ComingSoonScreen(
+                            title: 'Account Security',
+                            description: 'Password and session management for your account will live here.',
+                          ),
+                        ),
+                      ),
                     ),
                     const Divider(height: 1, color: Color(0xFFEEEEEE)),
                     _buildSettingsTile(
@@ -134,6 +143,14 @@ class ProfileScreen extends ConsumerWidget {
                       icon: Icons.notifications_none_rounded,
                       title: 'Notifications',
                       color: Colors.amber,
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const ComingSoonScreen(
+                            title: 'Notifications',
+                            description: 'Budget alerts, bill reminders, and monthly summaries will be configurable here.',
+                          ),
+                        ),
+                      ),
                     ),
                     const Divider(height: 1, color: Color(0xFFEEEEEE)),
                     _buildSettingsTile(
@@ -141,6 +158,16 @@ class ProfileScreen extends ConsumerWidget {
                       icon: Icons.palette_outlined,
                       title: 'Appearance',
                       color: Colors.purple,
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const ComingSoonScreen(
+                            title: 'Appearance',
+                            description:
+                                'PesaPlan currently follows your device\'s light/dark setting. '
+                                'A manual override will live here.',
+                          ),
+                        ),
+                      ),
                     ),
                   ],
                 ),

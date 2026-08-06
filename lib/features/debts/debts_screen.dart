@@ -18,6 +18,7 @@ class _DebtsScreenState extends State<DebtsScreen> {
   List<DebtRecord> _debts = [];
   bool _isLoading = true;
   String? _errorMessage;
+  String _strategy = 'snowball'; // 'snowball' | 'avalanche'
 
   @override
   void initState() {
@@ -66,6 +67,84 @@ class _DebtsScreenState extends State<DebtsScreen> {
   }
 
   String _money(num value) => '${widget.currency} ${value.toStringAsFixed(0)}';
+
+  /// Snowball orders by smallest balance first (fastest visible wins, for
+  /// motivation). Avalanche orders by highest interest rate first (least
+  /// total interest paid, mathematically optimal). Debts with no interest
+  /// rate on file sort last under avalanche, since we can't rank what we
+  /// don't know.
+  List<DebtRecord> _ordered(List<DebtRecord> debts, String strategy) {
+    final sorted = List<DebtRecord>.from(debts);
+    if (strategy == 'snowball') {
+      sorted.sort((a, b) => a.currentBalance.compareTo(b.currentBalance));
+    } else {
+      sorted.sort((a, b) {
+        final rateA = a.interestRate;
+        final rateB = b.interestRate;
+        if (rateA == null && rateB == null) return 0;
+        if (rateA == null) return 1;
+        if (rateB == null) return -1;
+        return rateB.compareTo(rateA);
+      });
+    }
+    return sorted;
+  }
+
+  Widget _buildStrategyCard(List<DebtRecord> unpaidDebts) {
+    final ordered = _ordered(unpaidDebts, _strategy);
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Payoff order', style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 12),
+            SegmentedButton<String>(
+              segments: const [
+                ButtonSegment(value: 'snowball', label: Text('Snowball')),
+                ButtonSegment(value: 'avalanche', label: Text('Avalanche')),
+              ],
+              selected: {_strategy},
+              onSelectionChanged: (selection) => setState(() => _strategy = selection.first),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              _strategy == 'snowball'
+                  ? 'Pay off smallest balances first for quick, motivating wins.'
+                  : 'Pay off highest interest rates first to minimize total interest paid.',
+              style: const TextStyle(color: Colors.black54, fontSize: 13),
+            ),
+            const SizedBox(height: 16),
+            for (var i = 0; i < ordered.length; i++)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Row(
+                  children: [
+                    CircleAvatar(radius: 12, child: Text('${i + 1}', style: const TextStyle(fontSize: 12))),
+                    const SizedBox(width: 12),
+                    Expanded(child: Text(ordered[i].loanName)),
+                    Text(
+                      _strategy == 'avalanche' && ordered[i].interestRate != null
+                          ? '${ordered[i].interestRate}%'
+                          : _money(ordered[i].currentBalance),
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                  ],
+                ),
+              ),
+            const SizedBox(height: 12),
+            const Text(
+              'This is general educational information, not personalized financial advice. '
+              'Consider your own situation, or speak with a qualified advisor, before deciding.',
+              style: TextStyle(fontSize: 11, color: Colors.black38, fontStyle: FontStyle.italic),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -130,31 +209,36 @@ class _DebtsScreenState extends State<DebtsScreen> {
                 ),
               );
             }
-            return ListView.separated(
+            final unpaidDebts = _debts.where((d) => !d.isPaidOff).toList();
+            return ListView(
               padding: const EdgeInsets.all(20),
-              itemCount: _debts.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 12),
-              itemBuilder: (context, index) {
-                final debt = _debts[index];
-                return Card(
-                  child: ListTile(
-                    onTap: () => _openDetail(debt),
-                    title: Text(debt.loanName),
-                    subtitle: Text(
-                      debt.isPaidOff
-                          ? 'Paid off'
-                          : '${_money(debt.currentBalance)} of ${_money(debt.originalAmount)} remaining',
-                    ),
-                    trailing: SizedBox(
-                      width: 56,
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(4),
-                        child: LinearProgressIndicator(value: debt.percentPaidOff, minHeight: 6),
+              children: [
+                if (unpaidDebts.length >= 2) ...[
+                  _buildStrategyCard(unpaidDebts),
+                  const SizedBox(height: 20),
+                ],
+                for (final debt in _debts) ...[
+                  Card(
+                    child: ListTile(
+                      onTap: () => _openDetail(debt),
+                      title: Text(debt.loanName),
+                      subtitle: Text(
+                        debt.isPaidOff
+                            ? 'Paid off'
+                            : '${_money(debt.currentBalance)} of ${_money(debt.originalAmount)} remaining',
+                      ),
+                      trailing: SizedBox(
+                        width: 56,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(4),
+                          child: LinearProgressIndicator(value: debt.percentPaidOff, minHeight: 6),
+                        ),
                       ),
                     ),
                   ),
-                );
-              },
+                  const SizedBox(height: 12),
+                ],
+              ],
             );
           }),
         ),

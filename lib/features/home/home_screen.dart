@@ -591,51 +591,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildBudgetCategories(BuildContext context) {
-    // Generate fallback categories matching mockup if none exist
-    final displayProgress = _budgetCategoryProgress.isNotEmpty
-        ? _budgetCategoryProgress
-        : [
-            BudgetCategoryProgress(
-              categoryId: '1',
-              categoryName: 'Food',
-              allocatedAmount: 24000,
-              spentAmount: 16800,
-              categoryIcon: 'fastfood_rounded',
-              categoryColor: '0xFFF97316',
-            ),
-            BudgetCategoryProgress(
-              categoryId: '2',
-              categoryName: 'Transport',
-              allocatedAmount: 18000,
-              spentAmount: 10260,
-              categoryIcon: 'directions_car_rounded',
-              categoryColor: '0xFF22C55E',
-            ),
-            BudgetCategoryProgress(
-              categoryId: '3',
-              categoryName: 'Bills',
-              allocatedAmount: 20000,
-              spentAmount: 14600,
-              categoryIcon: 'home_rounded',
-              categoryColor: '0xFF3B82F6',
-            ),
-            BudgetCategoryProgress(
-              categoryId: '4',
-              categoryName: 'Entertainment',
-              allocatedAmount: 10000,
-              spentAmount: 6300,
-              categoryIcon: 'movie_rounded',
-              categoryColor: '0xFF8B5CF6',
-            ),
-            BudgetCategoryProgress(
-              categoryId: '5',
-              categoryName: 'Shopping',
-              allocatedAmount: 15000,
-              spentAmount: 9300,
-              categoryIcon: 'shopping_bag_rounded',
-              categoryColor: '0xFFEC4899',
-            ),
-          ];
+    final displayProgress = _budgetCategoryProgress;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -652,32 +608,60 @@ class _HomeScreenState extends State<HomeScreen> {
                 color: Colors.black87,
               ),
             ),
-            GestureDetector(
-              onTap: () => widget.onTabChanged(2), // Budgets tab
-              child: const Text(
-                'View all',
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.primary,
+            if (displayProgress.isNotEmpty)
+              GestureDetector(
+                onTap: () => widget.onTabChanged(2), // Budgets tab
+                child: const Text(
+                  'View all',
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.primary,
+                  ),
                 ),
               ),
-            ),
           ],
         ),
         const SizedBox(height: 12),
-        SizedBox(
-          height: 150,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: displayProgress.length,
-            itemBuilder: (context, index) {
-              final cat = displayProgress[index];
-              return _buildCategoryCard(context, cat);
-            },
+        if (displayProgress.isEmpty)
+          AppCard(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Create a budget to take control of your spending.',
+                  style: TextStyle(fontFamily: 'Inter', fontSize: 14, color: Colors.black54),
+                ),
+                const SizedBox(height: 12),
+                GestureDetector(
+                  onTap: () => widget.onTabChanged(2), // Budgets tab
+                  child: const Text(
+                    'Create a budget',
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          )
+        else
+          SizedBox(
+            height: 150,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: displayProgress.length,
+              itemBuilder: (context, index) {
+                final cat = displayProgress[index];
+                return _buildCategoryCard(context, cat);
+              },
+            ),
           ),
-        ),
       ],
     );
   }
