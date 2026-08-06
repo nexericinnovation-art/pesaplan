@@ -3,7 +3,6 @@
 import 'package:flutter/material.dart';
 import '../../../app/theme/app_design_tokens.dart';
 
-
 /// A reusable card widget that applies the claymorphism style.
 ///
 /// This widget uses the [AppRadius.lg] for corner radius and combines an
@@ -16,18 +15,17 @@ class AppCard extends StatelessWidget {
   final EdgeInsetsGeometry? margin;
 
   const AppCard({
-    Key? key,
+    super.key, // ✅ FIX: Use super.key (Dart 3+)
     required this.child,
     this.elevation,
     this.color,
     this.padding,
     this.margin,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
     final bgColor = color ?? Theme.of(context).cardColor;
-    // final double elevationValue = elevation ?? AppElevation.medium; // Unused variable removed
     return Container(
       margin: margin ?? const EdgeInsets.all(0),
       padding: padding ?? const EdgeInsets.all(0),

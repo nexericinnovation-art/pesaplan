@@ -107,7 +107,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Transactions')),
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: FloatingActionButton.extended(heroTag: 'transactions-fab',
         onPressed: _openAdd,
         icon: const Icon(Icons.add),
         label: const Text('Add'),

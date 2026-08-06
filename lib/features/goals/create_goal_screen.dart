@@ -60,11 +60,12 @@ class _CreateGoalScreenState extends State<CreateGoalScreen> {
       );
       if (!mounted) return;
       Navigator.of(context).pop(true);
-    } catch (_) {
+    } catch (e) {
+      debugPrint('SAVE FAILED (goal): $e');
       if (!mounted) return;
       setState(() {
         _isSaving = false;
-        _errorMessage = "Couldn't save this goal. Check your connection and try again.";
+        _errorMessage = "Couldn't save. Check your connection and try again.";
       });
     }
   }

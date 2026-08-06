@@ -10,15 +10,12 @@ class RootNavigationScreen extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
 
   @override
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: Stack(
-        children: [
-          navigationShell,
-          Positioned(left: 0, right: 0, bottom: 0, child: _buildBottomNavigationBar()),
-        ],
-      ),
+      body: navigationShell,
+      bottomNavigationBar: _buildBottomNavigationBar(),
     );
   }
 

@@ -161,11 +161,12 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
 
       if (!mounted) return;
       Navigator.of(context).pop(true);
-    } catch (_) {
+    } catch (e) {
+      debugPrint('SAVE FAILED (transaction): $e');
       if (!mounted) return;
       setState(() {
         _isSaving = false;
-        _errorMessage = "Couldn't save this transaction. Check your connection and try again.";
+        _errorMessage = "Couldn't save. Check your connection and try again.";
       });
     }
   }

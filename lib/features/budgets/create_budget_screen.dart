@@ -147,11 +147,12 @@ class _CreateBudgetScreenState extends State<CreateBudgetScreen> {
       );
       if (!mounted) return;
       Navigator.of(context).pop(true);
-    } catch (_) {
+    } catch (e) {
+      debugPrint('SAVE FAILED (budget): $e');
       if (!mounted) return;
       setState(() {
         _isSaving = false;
-        _errorMessage = "Couldn't save this budget. Check your connection and try again.";
+        _errorMessage = "Couldn't save. Check your connection and try again.";
       });
     }
   }

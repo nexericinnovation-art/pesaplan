@@ -105,10 +105,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
       if (!mounted) return;
       widget.onComplete();
-    } catch (_) {
+    } catch (e) {
+      debugPrint('SAVE FAILED (onboarding): $e');
       if (!mounted) return;
       setState(() {
-        _errorMessage = "Couldn't save your details. Check your connection and try again.";
+        _errorMessage = "Couldn't save. Check your connection and try again.";
       });
     } finally {
       if (mounted) {

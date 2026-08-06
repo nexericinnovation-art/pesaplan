@@ -79,7 +79,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Budgets')),
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: FloatingActionButton.extended(heroTag: 'budgets-fab',
         onPressed: _openCreate,
         icon: const Icon(Icons.add),
         label: const Text('New budget'),

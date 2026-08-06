@@ -68,7 +68,7 @@ class _SavingsGoalsScreenState extends State<SavingsGoalsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Savings Goals')),
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: FloatingActionButton.extended(heroTag: 'goals-fab',
         onPressed: _openCreate,
         icon: const Icon(Icons.add),
         label: const Text('New goal'),
