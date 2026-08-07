@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/providers/profile_provider.dart';
 import '../../core/services/auth_identity_service.dart';
 import '../debts/debts_screen.dart';
+import '../insights/health_score_screen.dart';
 import '../recurring/recurring_transactions_screen.dart';
 import 'coming_soon_screen.dart';
 
@@ -90,6 +91,22 @@ class ProfileScreen extends ConsumerWidget {
                 backgroundColor: backgroundColor,
                 child: Column(
                   children: [
+                    _buildSettingsTile(
+                      context,
+                      icon: Icons.query_stats_rounded,
+                      title: 'Financial Health Score',
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => HealthScoreScreen(clerkUserId: clerkUserId),
+                          ),
+                        );
+                      },
+                    ),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Divider(height: 1, thickness: 0.8, color: Color(0xFFE2E8F0)),
+                    ),
                     _buildSettingsTile(
                       context,
                       icon: Icons.account_balance_wallet_outlined,
@@ -390,4 +407,3 @@ class _NeumorphicCard extends StatelessWidget {
     );
   }
 }
-
