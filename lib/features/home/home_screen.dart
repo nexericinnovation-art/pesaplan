@@ -1,6 +1,8 @@
-import 'package:flutter/material.dart';
 import 'package:clerk_flutter/clerk_flutter.dart';
-import '../../core/app_colors.dart';
+import 'package:flutter/material.dart';
+
+import '../../app/theme/app_colors.dart';
+import '../../app/theme/app_design_tokens.dart';
 import '../../core/models/budget_category_progress.dart';
 import '../../core/models/budget_record.dart';
 import '../../core/models/dashboard_summary.dart';
@@ -161,40 +163,64 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          Row(
             children: [
-              Text(
-                'Hello, $name 👋',
-                style: const TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
+              // Hamburger Menu Card (not wired to anything yet)
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.04),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
+                child: const Icon(Icons.menu_rounded, color: Colors.black87),
               ),
-              const SizedBox(height: 4),
-              Text(
-                dateString,
-                style: const TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 14,
-                  color: Colors.grey,
-                ),
+              const SizedBox(width: 12),
+              // Title Greetings
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Hello, $name 👋',
+                    style: const TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    dateString,
+                    style: const TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 14,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
+          // Notification Bell Card (not wired to anything yet)
           Container(
-            width: 42,
-            height: 42,
+            width: 48,
+            height: 48,
             decoration: BoxDecoration(
               color: Colors.white,
-              shape: BoxShape.circle,
+              borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withOpacity(0.04),
                   blurRadius: 10,
-                  offset: const Offset(0, 2),
+                  offset: const Offset(0, 4),
                 ),
               ],
             ),
@@ -245,41 +271,81 @@ class _HomeScreenState extends State<HomeScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'Total Balance',
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 14,
-                  color: Colors.white70,
-                ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Text(
+                        'Total Balance',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 14,
+                          color: Colors.white70,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      GestureDetector(
+                        onTap: () => setState(() => _obscureBalance = !_obscureBalance),
+                        child: Icon(
+                          _obscureBalance ? Icons.visibility_off : Icons.visibility,
+                          color: Colors.white70,
+                          size: 18,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    _obscureBalance ? '••••••' : _formatCurrency(balance),
+                    style: const TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
               ),
-              GestureDetector(
-                onTap: () => setState(() => _obscureBalance = !_obscureBalance),
-                child: Icon(
-                  _obscureBalance ? Icons.visibility_off : Icons.visibility,
-                  color: Colors.white70,
-                  size: 20,
+              // Search button
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
                 ),
+                child: const Icon(Icons.search_rounded, color: Colors.white70, size: 20),
               ),
             ],
           ),
-          const SizedBox(height: 8),
-          Text(
-            _obscureBalance ? '••••••' : _formatCurrency(balance),
-            style: const TextStyle(
-              fontFamily: 'Inter',
-              fontSize: 32,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
           Row(
             children: [
               _buildBalanceInfo('Income', income, Colors.greenAccent),
               const SizedBox(width: 24),
               _buildBalanceInfo('Expenses', expenses, Colors.redAccent),
+              const Spacer(),
+              // Voice search icon (not wired to anything yet)
+              const Icon(Icons.mic_none_rounded, color: Colors.white38, size: 22),
             ],
+          ),
+          const SizedBox(height: 16),
+          // Left this month badge
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.08),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            child: const Text(
+              'Left this month',
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 11,
+                color: Colors.white54,
+              ),
+            ),
           ),
         ],
       ),

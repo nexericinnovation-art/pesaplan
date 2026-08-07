@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
-import 'transactions_repository.dart';
+import '../../core/models/category_record.dart';
+import '../../core/models/transaction_record.dart';
+import '../../core/repositories/transactions_repository.dart';
 
 const _paymentMethods = ['cash', 'mpesa', 'bank', 'card', 'mobile_money', 'other'];
 
@@ -88,7 +90,8 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
           _categoryId = null;
         }
       });
-    } catch (_) {
+    } catch (e) {
+      debugPrint('LOAD FAILED (categories): $e');
       if (!mounted) return;
       setState(() {
         _isLoadingCategories = false;

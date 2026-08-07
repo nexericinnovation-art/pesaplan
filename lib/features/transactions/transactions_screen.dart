@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../core/models/transaction_record.dart';
+import '../../core/repositories/transactions_repository.dart';
 import 'add_edit_transaction_screen.dart';
-import 'transactions_repository.dart';
 
 class TransactionsScreen extends StatefulWidget {
   const TransactionsScreen({super.key, required this.clerkUserId, required this.currency});
@@ -36,7 +37,8 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         _transactions = transactions;
         _isLoading = false;
       });
-    } catch (_) {
+    } catch (e) {
+      debugPrint('LOAD FAILED (transactions): $e');
       if (!mounted) return;
       setState(() {
         _isLoading = false;
@@ -95,7 +97,8 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     try {
       await TransactionsRepository.deleteTransaction(id: transaction.id, clerkUserId: widget.clerkUserId);
       _load();
-    } catch (_) {
+    } catch (e) {
+      debugPrint('DELETE FAILED (transaction): $e');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Couldn't delete this transaction. Try again.")),
@@ -107,7 +110,8 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Transactions')),
-      floatingActionButton: FloatingActionButton.extended(heroTag: 'transactions-fab',
+      floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'transactions-fab',
         onPressed: _openAdd,
         icon: const Icon(Icons.add),
         label: const Text('Add'),
