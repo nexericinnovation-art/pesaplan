@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/providers/profile_provider.dart';
 import '../../core/services/auth_identity_service.dart';
 import '../debts/debts_screen.dart';
+import '../recurring/recurring_transactions_screen.dart';
 import 'coming_soon_screen.dart';
 
 class ProfileScreen extends ConsumerWidget {
@@ -97,6 +98,22 @@ class ProfileScreen extends ConsumerWidget {
                         Navigator.of(context).push(
                           MaterialPageRoute(
                             builder: (_) => DebtsScreen(clerkUserId: clerkUserId, currency: currency),
+                          ),
+                        );
+                      },
+                    ),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Divider(height: 1, thickness: 0.8, color: Color(0xFFE2E8F0)),
+                    ),
+                    _buildSettingsTile(
+                      context,
+                      icon: Icons.event_repeat_rounded,
+                      title: 'Recurring',
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => RecurringTransactionsScreen(clerkUserId: clerkUserId, currency: currency),
                           ),
                         );
                       },
