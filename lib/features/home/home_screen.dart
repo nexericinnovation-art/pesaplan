@@ -272,191 +272,192 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      padding: const EdgeInsets.all(20.0),
-      child: Row(
+      padding: const EdgeInsets.all(18.0),
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Left Column
-          Expanded(
-            flex: 11,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+          // Top Row: Balance label + eye icon on left, Progress ring on right
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Left: Total Balance + amount
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Total Balance',
-                      style: TextStyle(
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.white70,
-                      ),
+                    Row(
+                      children: [
+                        const Text(
+                          'Total Balance',
+                          style: TextStyle(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.white70,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _obscureBalance = !_obscureBalance;
+                            });
+                          },
+                          child: Icon(
+                            _obscureBalance
+                                ? Icons.visibility_off_outlined
+                                : Icons.visibility_outlined,
+                            color: Colors.white70,
+                            size: 16,
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 6),
-                    GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          _obscureBalance = !_obscureBalance;
-                        });
-                      },
-                      child: Icon(
-                        _obscureBalance
-                            ? Icons.visibility_off_outlined
-                            : Icons.visibility_outlined,
-                        color: Colors.white70,
-                        size: 16,
+                    const SizedBox(height: 4),
+                    Text(
+                      balanceText,
+                      style: const TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                        letterSpacing: -0.3,
                       ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  balanceText,
-                  style: const TextStyle(
-                    fontSize: 26,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white,
-                    letterSpacing: -0.3,
-                  ),
-                ),
-                const SizedBox(height: 14),
+              ),
+              const SizedBox(width: 12),
 
-                // White Card Breakdown Container
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.06),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
+              // Right: Progress Ring
+              Column(
+                children: [
+                  SizedBox(
+                    width: 90,
+                    height: 90,
+                    child: CustomPaint(
+                      painter: ProgressRingPainter(
+                        progress: _budgetProgressPercent,
+                        backgroundColor: Colors.white.withValues(alpha: 0.25),
+                        progressColor: Colors.white,
                       ),
-                    ],
-                  ),
-                  padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 12.0),
-                  child: Column(
-                    children: [
-                      _buildBreakdownRow(
-                        icon: Icons.arrow_upward_rounded,
-                        iconBg: const Color(0xFF3B82F6),
-                        label: 'Income',
-                        amount: incomeText,
-                        amountColor: const Color(0xFF2563EB),
-                      ),
-                      const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 8.0),
-                        child: Divider(height: 1, thickness: 0.6, color: Color(0xFFE2E8F0)),
-                      ),
-                      _buildBreakdownRow(
-                        icon: Icons.arrow_downward_rounded,
-                        iconBg: const Color(0xFFF43F5E),
-                        label: 'Expenses',
-                        amount: expensesText,
-                        amountColor: const Color(0xFFF43F5E),
-                      ),
-                      const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 8.0),
-                        child: Divider(height: 1, thickness: 0.6, color: Color(0xFFE2E8F0)),
-                      ),
-                      _buildBreakdownRow(
-                        icon: Icons.account_balance_wallet_rounded,
-                        iconBg: const Color(0xFF10B981),
-                        label: 'Savings',
-                        amount: savingsText,
-                        amountColor: const Color(0xFF10B981),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 12),
-
-                // Left This Month Pill Container
-                Container(
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
-                        blurRadius: 8,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
-                  ),
-                  padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 10.0),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(5),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF2563EB).withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Icon(
-                          Icons.account_balance_wallet_rounded,
-                          color: Color(0xFF2563EB),
-                          size: 16,
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
+                      child: Center(
                         child: Text(
-                          '$leftThisMonthText left this month',
+                          '${(_budgetProgressPercent * 100).toStringAsFixed(0)}%',
                           style: const TextStyle(
-                            fontSize: 12.5,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF2563EB),
+                            fontSize: 20,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
                           ),
-                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                    ],
+                    ),
                   ),
+                  const SizedBox(height: 6),
+                  const Text(
+                    'Budget\nUsed',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.white70,
+                      height: 1.25,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+
+          // White Breakdown Card
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(18),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.05),
+                  blurRadius: 8,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 10.0),
+            child: Column(
+              children: [
+                _buildBreakdownRow(
+                  icon: Icons.arrow_upward_rounded,
+                  iconBg: const Color(0xFF3B82F6),
+                  label: 'Income',
+                  amount: incomeText,
+                  amountColor: const Color(0xFF2563EB),
+                ),
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 6.0),
+                  child: Divider(height: 1, thickness: 0.6, color: Color(0xFFE2E8F0)),
+                ),
+                _buildBreakdownRow(
+                  icon: Icons.arrow_downward_rounded,
+                  iconBg: const Color(0xFFF43F5E),
+                  label: 'Expenses',
+                  amount: expensesText,
+                  amountColor: const Color(0xFFF43F5E),
+                ),
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 6.0),
+                  child: Divider(height: 1, thickness: 0.6, color: Color(0xFFE2E8F0)),
+                ),
+                _buildBreakdownRow(
+                  icon: Icons.account_balance_wallet_rounded,
+                  iconBg: const Color(0xFF10B981),
+                  label: 'Savings',
+                  amount: savingsText,
+                  amountColor: const Color(0xFF10B981),
                 ),
               ],
             ),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(height: 10),
 
-          // Right Column (Progress Ring)
-          Expanded(
-            flex: 9,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+          // Left This Month Pill
+          Container(
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.04),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 9.0),
+            child: Row(
               children: [
-                const SizedBox(height: 24),
-                SizedBox(
-                  width: 105,
-                  height: 105,
-                  child: CustomPaint(
-                    painter: ProgressRingPainter(
-                      progress: _budgetProgressPercent,
-                      backgroundColor: Colors.white.withValues(alpha: 0.25),
-                      progressColor: Colors.white,
-                    ),
-                    child: Center(
-                      child: Text(
-                        '${(_budgetProgressPercent * 100).toStringAsFixed(0)}%',
-                        style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w800,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
+                Container(
+                  padding: const EdgeInsets.all(5),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF2563EB).withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(7),
+                  ),
+                  child: const Icon(
+                    Icons.account_balance_wallet_rounded,
+                    color: Color(0xFF2563EB),
+                    size: 14,
                   ),
                 ),
-                const SizedBox(height: 14),
-                const Text(
-                  'Monthly Budget\nUsed',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.white,
-                    height: 1.25,
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    '$leftThisMonthText left this month',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF2563EB),
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
@@ -466,6 +467,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
+
 
   Widget _buildBreakdownRow({
     required IconData icon,
