@@ -3,9 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/providers/profile_provider.dart';
 import '../../core/services/auth_identity_service.dart';
-import '../../app/theme/app_colors.dart';
-import '../../ui/design_system/components/app_card.dart';
-import '../../ui/design_system/components/app_button.dart';
 import '../debts/debts_screen.dart';
 import 'coming_soon_screen.dart';
 
@@ -25,95 +22,77 @@ class ProfileScreen extends ConsumerWidget {
     final displayName = name.isNotEmpty ? name : 'PesaPlan User';
     final avatarUrl = user?.imageUrl;
 
+    const backgroundColor = Color(0xFFEFF3FA);
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: backgroundColor,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
+          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 24.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const SizedBox(height: 20),
-              // Beautiful Header
-              Text(
+              const SizedBox(height: 12),
+              // Page Header Title
+              const Text(
                 'My Profile',
-                style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      color: Colors.black87,
-                    ),
-              ),
-              const SizedBox(height: 32),
-
-              // Avatar Card with Bevel Highlight
-              Center(
-                child: Container(
-                  width: 130,
-                  height: 130,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.08),
-                        blurRadius: 20,
-                        offset: const Offset(0, 10),
-                      ),
-                    ],
-                  ),
-                  child: ClipOval(
-                    child: Padding(
-                      padding: const EdgeInsets.all(6.0),
-                      child: avatarUrl != null && avatarUrl.isNotEmpty
-                          ? Image.network(
-                              avatarUrl,
-                              fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => _buildDefaultAvatar(context, displayName),
-                            )
-                          : _buildDefaultAvatar(context, displayName),
-                    ),
-                  ),
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF0F172A),
+                  letterSpacing: -0.3,
                 ),
               ),
+              const SizedBox(height: 28),
+
+              // Neumorphic Avatar Container
+              _buildNeumorphicAvatar(avatarUrl, displayName),
               const SizedBox(height: 24),
 
               // User Info Card
-              AppCard(
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  children: [
-                    Text(
-                      displayName,
-                      style: const TextStyle(
-                        fontFamily: 'SF Pro Display',
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
+              _NeumorphicCard(
+                borderRadius: 24,
+                padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 24.0),
+                backgroundColor: backgroundColor,
+                child: SizedBox(
+                  width: double.infinity,
+                  child: Column(
+                    children: [
+                      Text(
+                        displayName,
+                        style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF0F172A),
+                          letterSpacing: -0.3,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      email,
-                      style: const TextStyle(
-                        fontFamily: 'Inter',
-                        fontSize: 14,
-                        color: Colors.black54,
+                      const SizedBox(height: 6),
+                      Text(
+                        email,
+                        style: const TextStyle(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w400,
+                          color: Color(0xFF64748B),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
               const SizedBox(height: 24),
 
               // Settings Items Card
-              AppCard(
-                padding: const EdgeInsets.all(16.0),
+              _NeumorphicCard(
+                borderRadius: 28,
+                padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
+                backgroundColor: backgroundColor,
                 child: Column(
                   children: [
                     _buildSettingsTile(
                       context,
                       icon: Icons.account_balance_wallet_outlined,
                       title: 'Debts',
-                      color: Colors.redAccent,
                       onTap: () {
                         Navigator.of(context).push(
                           MaterialPageRoute(
@@ -122,12 +101,14 @@ class ProfileScreen extends ConsumerWidget {
                         );
                       },
                     ),
-                    const Divider(height: 1, color: Color(0xFFEEEEEE)),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Divider(height: 1, thickness: 0.8, color: Color(0xFFE2E8F0)),
+                    ),
                     _buildSettingsTile(
                       context,
                       icon: Icons.shield_outlined,
                       title: 'Account Security',
-                      color: Colors.blueAccent,
                       onTap: () => Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (_) => const ComingSoonScreen(
@@ -137,12 +118,14 @@ class ProfileScreen extends ConsumerWidget {
                         ),
                       ),
                     ),
-                    const Divider(height: 1, color: Color(0xFFEEEEEE)),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Divider(height: 1, thickness: 0.8, color: Color(0xFFE2E8F0)),
+                    ),
                     _buildSettingsTile(
                       context,
                       icon: Icons.notifications_none_rounded,
                       title: 'Notifications',
-                      color: Colors.amber,
                       onTap: () => Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (_) => const ComingSoonScreen(
@@ -152,12 +135,14 @@ class ProfileScreen extends ConsumerWidget {
                         ),
                       ),
                     ),
-                    const Divider(height: 1, color: Color(0xFFEEEEEE)),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Divider(height: 1, thickness: 0.8, color: Color(0xFFE2E8F0)),
+                    ),
                     _buildSettingsTile(
                       context,
                       icon: Icons.palette_outlined,
                       title: 'Appearance',
-                      color: Colors.purple,
                       onTap: () => Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (_) => const ComingSoonScreen(
@@ -172,27 +157,56 @@ class ProfileScreen extends ConsumerWidget {
                   ],
                 ),
               ),
-              const SizedBox(height: 36),
+              const SizedBox(height: 32),
 
               // Log Out Button
-              SizedBox(
-                width: double.infinity,
-                child: AppButton(
-                  isPrimary: false,
-                  onPressed: () async {
-                    await auth.signOut();
-                  },
-                  child: const Text(
-                    'Log Out',
-                    style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
+              GestureDetector(
+                onTap: () async {
+                  await auth.signOut();
+                },
+                child: Container(
+                  height: 56,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                      colors: [
+                        Color(0xFF3B82F6),
+                        Color(0xFF1D4ED8),
+                      ],
                     ),
+                    borderRadius: BorderRadius.circular(28),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF1D4ED8).withValues(alpha: 0.35),
+                        blurRadius: 14,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.logout_rounded,
+                        color: Colors.white,
+                        size: 22,
+                      ),
+                      SizedBox(width: 8),
+                      Text(
+                        'Log Out',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
+              const SizedBox(height: 16),
             ],
           ),
         ),
@@ -200,17 +214,60 @@ class ProfileScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildDefaultAvatar(BuildContext context, String name) {
-    final initial = name.isNotEmpty ? name.substring(0, 1).toUpperCase() : 'P';
-    return CircleAvatar(
-      backgroundColor: AppColors.primary.withOpacity(0.15),
-      child: Text(
-        initial,
-        style: const TextStyle(
-          fontSize: 36,
-          fontWeight: FontWeight.bold,
-          color: AppColors.primary,
+  Widget _buildNeumorphicAvatar(String? avatarUrl, String displayName) {
+    return Container(
+      width: 140,
+      height: 140,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        shape: BoxShape.circle,
+        boxShadow: [
+          const BoxShadow(
+            color: Colors.white,
+            offset: Offset(-8, -8),
+            blurRadius: 16,
+            spreadRadius: 2,
+          ),
+          BoxShadow(
+            color: const Color(0xFFBCCCDD).withValues(alpha: 0.6),
+            offset: const Offset(8, 8),
+            blurRadius: 16,
+            spreadRadius: 2,
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(10.0),
+      child: Container(
+        decoration: const BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFF3B82F6),
+              Color(0xFF1D4ED8),
+            ],
+          ),
         ),
+        child: ClipOval(
+          child: avatarUrl != null && avatarUrl.isNotEmpty
+              ? Image.network(
+                  avatarUrl,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, _, _) => _buildDefaultAvatarContent(displayName),
+                )
+              : _buildDefaultAvatarContent(displayName),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDefaultAvatarContent(String displayName) {
+    return const Center(
+      child: Icon(
+        Icons.person,
+        size: 78,
+        color: Colors.white,
       ),
     );
   }
@@ -219,31 +276,101 @@ class ProfileScreen extends ConsumerWidget {
     BuildContext context, {
     required IconData icon,
     required String title,
-    required Color color,
     VoidCallback? onTap,
   }) {
-    return ListTile(
-      leading: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(12),
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 8.0),
+        child: Row(
+          children: [
+            // Neumorphic icon container
+            Container(
+              width: 46,
+              height: 46,
+              decoration: BoxDecoration(
+                color: const Color(0xFFEFF3FA),
+                borderRadius: BorderRadius.circular(14),
+                boxShadow: [
+                  const BoxShadow(
+                    color: Colors.white,
+                    offset: Offset(-3, -3),
+                    blurRadius: 6,
+                  ),
+                  BoxShadow(
+                    color: const Color(0xFFAEBECF).withValues(alpha: 0.5),
+                    offset: const Offset(3, 3),
+                    blurRadius: 6,
+                  ),
+                ],
+              ),
+              child: Icon(
+                icon,
+                color: const Color(0xFF1D4ED8),
+                size: 22,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 15.5,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF0F172A),
+                ),
+              ),
+            ),
+            const Icon(
+              Icons.chevron_right_rounded,
+              color: Color(0xFF64748B),
+              size: 20,
+            ),
+          ],
         ),
-        child: Icon(icon, color: color, size: 20),
       ),
-      title: Text(
-        title,
-        style: const TextStyle(
-          fontFamily: 'Inter',
-          fontSize: 15,
-          fontWeight: FontWeight.w500,
-          color: Colors.black87,
-        ),
-      ),
-      trailing: const Icon(Icons.chevron_right, color: Colors.black26, size: 18),
-      onTap: onTap ?? () {
-        // Account Security / Notifications / Appearance: not implemented yet.
-      },
     );
   }
 }
+
+class _NeumorphicCard extends StatelessWidget {
+  final Widget child;
+  final double borderRadius;
+  final EdgeInsetsGeometry padding;
+  final Color backgroundColor;
+
+  const _NeumorphicCard({
+    required this.child,
+    required this.borderRadius,
+    required this.padding,
+    required this.backgroundColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: padding,
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(borderRadius),
+        boxShadow: [
+          const BoxShadow(
+            color: Colors.white,
+            offset: Offset(-6, -6),
+            blurRadius: 14,
+            spreadRadius: 1,
+          ),
+          BoxShadow(
+            color: const Color(0xFFAEBECF).withValues(alpha: 0.45),
+            offset: const Offset(6, 6),
+            blurRadius: 14,
+            spreadRadius: 1,
+          ),
+        ],
+      ),
+      child: child,
+    );
+  }
+}
+

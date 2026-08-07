@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../core/models/category_record.dart';
-import '../../core/models/transaction_record.dart';
-import '../../core/repositories/transactions_repository.dart';
+import 'transactions_repository.dart';
 
 const _paymentMethods = ['cash', 'mpesa', 'bank', 'card', 'mobile_money', 'other'];
 

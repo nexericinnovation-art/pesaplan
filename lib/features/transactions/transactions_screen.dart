@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../core/models/transaction_record.dart';
-import '../../core/repositories/transactions_repository.dart';
 import 'add_edit_transaction_screen.dart';
+import 'transactions_repository.dart';
 
 class TransactionsScreen extends StatefulWidget {
   const TransactionsScreen({super.key, required this.clerkUserId, required this.currency});
