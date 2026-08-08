@@ -1,11 +1,11 @@
 import 'dart:math' as math;
 
-import 'package:clerk_flutter/clerk_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../app/config/environment.dart';
 import '../../app/theme/app_colors.dart';
 import 'auth_status_view.dart';
+import 'widgets/custom_auth_form.dart';
 
 class AuthScreen extends StatelessWidget {
   const AuthScreen({super.key});
@@ -149,8 +149,8 @@ class _AuthBody extends StatelessWidget {
                             const SizedBox(height: 16),
                           ],
 
-                          // ── Clerk Authentication Widget ────────────────
-                          const ClerkAuthentication(),
+                          // ── Custom Sign In / Sign Up Form ──────────────
+                          const CustomAuthForm(),
                           const SizedBox(height: 16),
 
                           // ── Security badge ─────────────────────────────
@@ -416,4 +416,3 @@ class _AuthBody extends StatelessWidget {
     );
   }
 }
-
