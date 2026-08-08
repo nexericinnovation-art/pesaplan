@@ -161,6 +161,26 @@ class TransactionsRepository {
     return rows.map((row) => TransactionRecord.fromMap(row)).toList();
   }
 
+  /// For reports: every transaction in a date range, no pagination limit —
+  /// deliberately separate from `fetchTransactions`, which caps at `limit`
+  /// for the scrolling list view. A report that silently dropped
+  /// transactions past item 50 would be worse than useless.
+  static Future<List<TransactionRecord>> fetchTransactionsInRange({
+    required String clerkUserId,
+    required DateTime start,
+    required DateTime end,
+  }) async {
+    final rows = await SupabaseService.client
+        .from('transactions')
+        .select('*, categories(name, icon, color)')
+        .eq('user_id', clerkUserId)
+        .gte('transaction_date', start.toIso8601String().split('T').first)
+        .lte('transaction_date', end.toIso8601String().split('T').first)
+        .order('transaction_date', ascending: false);
+
+    return rows.map((row) => TransactionRecord.fromMap(row)).toList();
+  }
+
   static Future<TransactionRecord> createTransaction({
     required String clerkUserId,
     required String type,

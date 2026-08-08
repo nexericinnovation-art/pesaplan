@@ -6,6 +6,7 @@ import '../../core/services/auth_identity_service.dart';
 import '../debts/debts_screen.dart';
 import '../insights/health_score_screen.dart';
 import '../recurring/recurring_transactions_screen.dart';
+import '../reports/reports_screen.dart';
 import 'coming_soon_screen.dart';
 
 class ProfileScreen extends ConsumerWidget {
@@ -131,6 +132,22 @@ class ProfileScreen extends ConsumerWidget {
                         Navigator.of(context).push(
                           MaterialPageRoute(
                             builder: (_) => RecurringTransactionsScreen(clerkUserId: clerkUserId, currency: currency),
+                          ),
+                        );
+                      },
+                    ),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Divider(height: 1, thickness: 0.8, color: Color(0xFFE2E8F0)),
+                    ),
+                    _buildSettingsTile(
+                      context,
+                      icon: Icons.picture_as_pdf_outlined,
+                      title: 'Reports',
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => ReportsScreen(clerkUserId: clerkUserId, currency: currency),
                           ),
                         );
                       },
