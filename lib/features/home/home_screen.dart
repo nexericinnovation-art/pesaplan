@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 
 import '../transactions/transactions_repository.dart';
 import '../budgets/budgets_repository.dart';
+import '../insights/health_score_repository.dart';
+import '../insights/health_score_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({
@@ -28,6 +30,8 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _isLoading = true;
   String? _errorMessage;
   bool _obscureBalance = false;
+  HealthScoreRecord? _healthScore;
+  bool _isLoadingHealthScore = true;
 
   static const backgroundColor = Color(0xFFEFF3FA);
 
@@ -35,6 +39,26 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _load();
+    _loadHealthScore();
+  }
+
+  /// Deliberately separate from `_load()`: the health score is a bonus on
+  /// this screen, not core dashboard data. If it fails, the rest of the
+  /// dashboard should still work — it shouldn't take income/expenses/
+  /// transactions down with it.
+  Future<void> _loadHealthScore() async {
+    try {
+      final record = await HealthScoreRepository.fetch(clerkUserId: widget.clerkUserId);
+      if (!mounted) return;
+      setState(() {
+        _healthScore = record;
+        _isLoadingHealthScore = false;
+      });
+    } catch (e) {
+      debugPrint('LOAD FAILED (health score, dashboard card): $e');
+      if (!mounted) return;
+      setState(() => _isLoadingHealthScore = false);
+    }
   }
 
   Future<void> _load() async {
@@ -82,7 +106,8 @@ class _HomeScreenState extends State<HomeScreen> {
         _budgetProgressPercent = percent;
         _isLoading = false;
       });
-    } catch (_) {
+    } catch (e) {
+      debugPrint('LOAD FAILED (dashboard): $e');
       if (!mounted) return;
       setState(() {
         _isLoading = false;
@@ -169,6 +194,8 @@ class _HomeScreenState extends State<HomeScreen> {
               _buildSearchBar(context),
               const SizedBox(height: 20),
               _buildBalanceCard(context, summary),
+              const SizedBox(height: 24),
+              _buildHealthScoreCard(context),
               const SizedBox(height: 24),
               _buildBudgetsSection(context),
               const SizedBox(height: 24),
@@ -505,6 +532,68 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildHealthScoreCard(BuildContext context) {
+    final record = _healthScore;
+
+    return GestureDetector(
+      onTap: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => HealthScoreScreen(clerkUserId: widget.clerkUserId)),
+        );
+      },
+      child: _NeumorphicCard(
+        borderRadius: 24,
+        padding: const EdgeInsets.all(18.0),
+        backgroundColor: backgroundColor,
+        child: Row(
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: const Color(0xFF1D5DE4).withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              alignment: Alignment.center,
+              child: _isLoadingHealthScore
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : Text(
+                      record?.score != null ? record!.score!.toStringAsFixed(0) : '—',
+                      style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF1D5DE4)),
+                    ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Financial Health Score',
+                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: Color(0xFF0F172A)),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    _isLoadingHealthScore
+                        ? 'Calculating…'
+                        : (record?.score != null
+                            ? 'Based on ${record!.componentsIncluded} of 5 factors this month'
+                            : 'Add activity this month to see your score'),
+                    style: const TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right_rounded, color: Color(0xFF94A3B8)),
+          ],
+        ),
+      ),
     );
   }
 
@@ -1062,4 +1151,4 @@ class _NeumorphicCard extends StatelessWidget {
       child: child,
     );
   }
-}
+}
