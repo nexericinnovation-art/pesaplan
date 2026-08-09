@@ -191,13 +191,17 @@ class _CustomAuthFormState extends State<CustomAuthForm> {
       return;
     }
 
-    final needsLegalAcceptance = authState.env.user.signUp.legalConsentEnabled;
-    if (needsLegalAcceptance && !_hasLegalAcceptance) {
+    if (!_hasLegalAcceptance) {
       setState(() => _inlineError = 'Please accept the terms to continue.');
       return;
     }
 
     setState(() => _isSubmitting = true);
+    // Only send legalAccepted to Clerk if its Dashboard config actually
+    // expects that field — sending it unconditionally risks an API error
+    // if legal consent isn't configured there. The checkbox itself is
+    // required by the app regardless, checked above.
+    final clerkExpectsLegalField = authState.env.user.signUp.legalConsentEnabled;
     await authState.safelyCall(context, () async {
       await authState.attemptSignUp(
         strategy: clerk.Strategy.password,
@@ -206,7 +210,7 @@ class _CustomAuthFormState extends State<CustomAuthForm> {
         emailAddress: _signUpEmail.text.trim(),
         password: _signUpPassword.text,
         passwordConfirmation: _signUpConfirmPassword.text,
-        legalAccepted: needsLegalAcceptance ? _hasLegalAcceptance : null,
+        legalAccepted: clerkExpectsLegalField ? _hasLegalAcceptance : null,
       );
 
       final signUp = authState.signUp;
@@ -484,7 +488,6 @@ class _CustomAuthFormState extends State<CustomAuthForm> {
 
   Widget _buildSignUpDetails() {
     final authState = ClerkAuth.of(context);
-    final needsLegalAcceptance = authState.env.user.signUp.legalConsentEnabled;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -529,15 +532,17 @@ class _CustomAuthFormState extends State<CustomAuthForm> {
           onToggleVisibility: () => setState(() => _signUpConfirmVisible = !_signUpConfirmVisible),
           onSubmitted: (_) => _submitSignUpDetails(),
         ),
-        if (needsLegalAcceptance) ...[
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Checkbox(
-                value: _hasLegalAcceptance,
-                onChanged: (v) => setState(() => _hasLegalAcceptance = v ?? false),
-              ),
-              Expanded(
+        const SizedBox(height: 8),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Checkbox(
+              value: _hasLegalAcceptance,
+              onChanged: (v) => setState(() => _hasLegalAcceptance = v ?? false),
+            ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.only(top: 12),
                 child: RichText(
                   text: TextSpan(
                     style: const TextStyle(fontSize: 13, color: Colors.black87),
@@ -576,9 +581,9 @@ class _CustomAuthFormState extends State<CustomAuthForm> {
                   ),
                 ),
               ),
-            ],
-          ),
-        ],
+            ),
+          ],
+        ),
         _errorText(),
         const SizedBox(height: 8),
         _gradientButton(label: 'Create account', onPressed: _submitSignUpDetails, loading: _isSubmitting),

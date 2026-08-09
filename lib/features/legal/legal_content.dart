@@ -14,7 +14,7 @@ class LegalContent {
   static const String termsOfService = '''
 1. ACCEPTANCE OF TERMS
 
-By creating an account or using PesaPlan ("the App", "the Service"), you agree to these Terms of Service. If you do not agree, do not use the App. These terms are between you and [LEGAL ENTITY NAME], a company registered in Kenya ("PesaPlan", "we", "us").
+By creating an account or using PesaPlan ("the App", "the Service"), you agree to these Terms of Service. If you do not agree, do not use the App. These terms are between you and PesaPan, a company registered in Kenya ("PesaPlan", "we", "us").
 
 2. WHAT PESAPLAN IS — AND ISN'T
 
@@ -60,13 +60,13 @@ These terms are governed by the laws of Kenya. Disputes will be subject to the e
 
 12. CONTACT
 
-Questions about these terms: [SUPPORT EMAIL]
+Questions about these terms: nexericinnovation.com
 ''';
 
   static const String privacyPolicy = '''
 1. WHO WE ARE
 
-PesaPlan is operated by [LEGAL ENTITY NAME] ("we", "us"), registered in Kenya. We are the data controller for the personal data described below, in the sense used by Kenya's Data Protection Act, 2019.
+PesaPlan is operated by PesaPlan ("we", "us"), registered in Kenya. We are the data controller for the personal data described below, in the sense used by Kenya's Data Protection Act, 2019.
 
 2. WHAT WE COLLECT
 
@@ -120,6 +120,6 @@ We may update this policy as the App changes. Material changes will be flagged i
 
 10. CONTACT
 
-Questions about this policy, or to exercise your data rights: [SUPPORT EMAIL]
+Questions about this policy, or to exercise your data rights: nexericinnovation@gmail.com
 ''';
 }
