@@ -4,6 +4,9 @@ import 'package:clerk_auth/clerk_auth.dart' as clerk;
 import 'package:clerk_flutter/clerk_flutter.dart';
 import 'package:flutter/material.dart';
 
+import '../../../ui/design_system/components/app_button.dart';
+import '../../../ui/design_system/components/app_text_field.dart';
+
 enum _Mode { signIn, signUp }
 
 enum _SignInStep { details, verifyCode }
@@ -12,15 +15,16 @@ enum _SignUpStep { details, verifyEmail }
 
 /// Custom PesaPlan-styled sign-in / sign-up form, calling the same
 /// [ClerkAuthState] methods the prebuilt `ClerkAuthentication()` widget uses
-/// internally (`attemptSignIn`, `attemptSignUp`, `safelyCall`) — this
-/// doesn't bypass Clerk, it only replaces the UI layer, matching what
-/// Clerk's own docs call a "Custom Flow".
+/// internally (`attemptSignIn`, `attemptSignUp`, `ssoSignIn`, `safelyCall`)
+/// — this doesn't bypass Clerk, it only replaces the UI layer with the
+/// app's own claymorphism design system (AppTextField / AppButton), matching
+/// what Clerk's own docs call a "Custom Flow".
 ///
-/// Scope: email + password, with optional first/last name. If your Clerk
-/// Dashboard requires additional fields (username, phone number) that
-/// aren't collected here, sign-up will surface a Clerk error rather than
-/// silently failing — that's a sign to either adjust the Dashboard config
-/// or extend this form, not a bug in this widget.
+/// Scope: email + password + whatever OAuth providers are configured in the
+/// Clerk Dashboard, plus optional first/last name. If your Dashboard
+/// requires additional fields (username, phone) not collected here,
+/// sign-up will surface a Clerk error rather than silently failing — that's
+/// a sign to adjust the Dashboard config or extend this form.
 class CustomAuthForm extends StatefulWidget {
   const CustomAuthForm({super.key});
 
@@ -90,6 +94,15 @@ class _CustomAuthFormState extends State<CustomAuthForm> {
     });
   }
 
+  Future<void> _ssoSignIn(clerk.Strategy strategy) async {
+    setState(() => _inlineError = null);
+    final authState = ClerkAuth.of(context, listen: false);
+    // ssoSignIn handles the whole OAuth flow itself (in-app browser dialog,
+    // redirect handling) — this one call covers sign-in AND sign-up, since
+    // Clerk creates the account automatically if it's a new OAuth user.
+    await authState.ssoSignIn(context, strategy);
+  }
+
   Future<void> _signIn() async {
     setState(() => _inlineError = null);
     final authState = ClerkAuth.of(context, listen: false);
@@ -102,9 +115,7 @@ class _CustomAuthFormState extends State<CustomAuthForm> {
 
       // Password alone isn't always enough to finish — Clerk's "Client
       // Trust" check (on by default) or an actual second factor can leave
-      // the sign-in needing one more step, without throwing an error. This
-      // was the actual cause of "loads then returns with no error": that
-      // extra step was never being detected or handled.
+      // the sign-in needing one more step, without throwing an error.
       final signIn = authState.signIn;
       if (signIn != null && signIn.status.needsFactor && mounted) {
         final stage = clerk.Stage.forStatus(signIn.status);
@@ -121,7 +132,7 @@ class _CustomAuthFormState extends State<CustomAuthForm> {
         );
         _signInFactorStrategy = factor.strategy;
         // Triggers Clerk to send the code — same "call again with just the
-        // strategy" pattern as sign-up verification.
+        // strategy" pattern used for sign-up verification below.
         await authState.attemptSignIn(strategy: factor.strategy);
         if (mounted) setState(() => _signInStep = _SignInStep.verifyCode);
       }
@@ -209,11 +220,66 @@ class _CustomAuthFormState extends State<CustomAuthForm> {
     }
   }
 
-  InputDecoration _decoration(String label) => InputDecoration(
-        labelText: label,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      );
+  Widget _labeledField({
+    required String label,
+    required TextEditingController controller,
+    bool obscureText = false,
+    TextInputType keyboardType = TextInputType.text,
+    void Function(String)? onSubmitted,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.black54)),
+        const SizedBox(height: 6),
+        AppTextField(
+          controller: controller,
+          hintText: label,
+          obscureText: obscureText,
+          keyboardType: keyboardType,
+          textInputAction: onSubmitted != null ? TextInputAction.done : TextInputAction.next,
+          onSubmitted: onSubmitted,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildOAuthSection(ClerkAuthState authState) {
+    final strategies = authState.env.strategies.where((s) => s.isOauth).toList();
+    if (strategies.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      children: [
+        for (final strategy in strategies) ...[
+          AppButton(
+            isPrimary: false,
+            onPressed: () => _ssoSignIn(strategy),
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.login_rounded, size: 18),
+                const SizedBox(width: 8),
+                Text('Continue with ${strategy.provider ?? strategy.name}'),
+              ],
+            ),
+          ),
+          const SizedBox(height: 10),
+        ],
+        Row(
+          children: [
+            Expanded(child: Divider(color: Colors.grey.shade300)),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Text('or', style: TextStyle(color: Colors.grey.shade500, fontSize: 12)),
+            ),
+            Expanded(child: Divider(color: Colors.grey.shade300)),
+          ],
+        ),
+        const SizedBox(height: 16),
+      ],
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -227,34 +293,31 @@ class _CustomAuthFormState extends State<CustomAuthForm> {
   }
 
   Widget _buildSignIn() {
+    final authState = ClerkAuth.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text('Sign in', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
         const SizedBox(height: 16),
-        TextField(
-          controller: _signInEmail,
-          keyboardType: TextInputType.emailAddress,
-          textInputAction: TextInputAction.next,
-          decoration: _decoration('Email'),
-        ),
+        _buildOAuthSection(authState),
+        _labeledField(label: 'Email', controller: _signInEmail, keyboardType: TextInputType.emailAddress),
         const SizedBox(height: 12),
-        TextField(
+        _labeledField(
+          label: 'Password',
           controller: _signInPassword,
           obscureText: true,
-          textInputAction: TextInputAction.done,
           onSubmitted: (_) => _signIn(),
-          decoration: _decoration('Password'),
         ),
         if (_inlineError != null) ...[
           const SizedBox(height: 8),
           Text(_inlineError!, style: TextStyle(color: Theme.of(context).colorScheme.error, fontSize: 13)),
         ],
         const SizedBox(height: 16),
-        FilledButton(onPressed: _signIn, child: const Padding(
-          padding: EdgeInsets.symmetric(vertical: 4),
-          child: Text('Sign in'),
-        )),
+        AppButton(
+          onPressed: _signIn,
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          child: const Center(child: Text('Sign in')),
+        ),
         const SizedBox(height: 12),
         Center(
           child: TextButton(
@@ -275,46 +338,24 @@ class _CustomAuthFormState extends State<CustomAuthForm> {
       children: [
         Text('Create your account', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
         const SizedBox(height: 16),
+        _buildOAuthSection(authState),
         Row(
           children: [
-            Expanded(
-              child: TextField(
-                controller: _firstName,
-                textInputAction: TextInputAction.next,
-                decoration: _decoration('First name'),
-              ),
-            ),
+            Expanded(child: _labeledField(label: 'First name', controller: _firstName)),
             const SizedBox(width: 12),
-            Expanded(
-              child: TextField(
-                controller: _lastName,
-                textInputAction: TextInputAction.next,
-                decoration: _decoration('Last name'),
-              ),
-            ),
+            Expanded(child: _labeledField(label: 'Last name', controller: _lastName)),
           ],
         ),
         const SizedBox(height: 12),
-        TextField(
-          controller: _signUpEmail,
-          keyboardType: TextInputType.emailAddress,
-          textInputAction: TextInputAction.next,
-          decoration: _decoration('Email'),
-        ),
+        _labeledField(label: 'Email', controller: _signUpEmail, keyboardType: TextInputType.emailAddress),
         const SizedBox(height: 12),
-        TextField(
-          controller: _signUpPassword,
-          obscureText: true,
-          textInputAction: TextInputAction.next,
-          decoration: _decoration('Password'),
-        ),
+        _labeledField(label: 'Password', controller: _signUpPassword, obscureText: true),
         const SizedBox(height: 12),
-        TextField(
+        _labeledField(
+          label: 'Confirm password',
           controller: _signUpConfirmPassword,
           obscureText: true,
-          textInputAction: TextInputAction.done,
           onSubmitted: (_) => _submitSignUpDetails(),
-          decoration: _decoration('Confirm password'),
         ),
         if (needsLegalAcceptance) ...[
           const SizedBox(height: 8),
@@ -333,10 +374,11 @@ class _CustomAuthFormState extends State<CustomAuthForm> {
           Text(_inlineError!, style: TextStyle(color: Theme.of(context).colorScheme.error, fontSize: 13)),
         ],
         const SizedBox(height: 16),
-        FilledButton(onPressed: _submitSignUpDetails, child: const Padding(
-          padding: EdgeInsets.symmetric(vertical: 4),
-          child: Text('Create account'),
-        )),
+        AppButton(
+          onPressed: _submitSignUpDetails,
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          child: const Center(child: Text('Create account')),
+        ),
         const SizedBox(height: 12),
         Center(
           child: TextButton(
@@ -352,29 +394,29 @@ class _CustomAuthFormState extends State<CustomAuthForm> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text('Verify it\'s you', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+        Text("Verify it's you", style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
         const Text(
           "We sent a verification code to confirm this sign-in.",
           style: TextStyle(color: Colors.black54),
         ),
         const SizedBox(height: 16),
-        TextField(
+        _labeledField(
+          label: 'Verification code',
           controller: _signInCode,
           keyboardType: TextInputType.number,
-          textInputAction: TextInputAction.done,
           onSubmitted: (_) => _submitSignInCode(),
-          decoration: _decoration('Verification code'),
         ),
         if (_inlineError != null) ...[
           const SizedBox(height: 8),
           Text(_inlineError!, style: TextStyle(color: Theme.of(context).colorScheme.error, fontSize: 13)),
         ],
         const SizedBox(height: 16),
-        FilledButton(onPressed: _submitSignInCode, child: const Padding(
-          padding: EdgeInsets.symmetric(vertical: 4),
-          child: Text('Verify'),
-        )),
+        AppButton(
+          onPressed: _submitSignInCode,
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          child: const Center(child: Text('Verify')),
+        ),
         const SizedBox(height: 8),
         Center(
           child: TextButton(onPressed: _resendSignInCode, child: const Text("Didn't get a code? Resend")),
@@ -394,22 +436,22 @@ class _CustomAuthFormState extends State<CustomAuthForm> {
           style: const TextStyle(color: Colors.black54),
         ),
         const SizedBox(height: 16),
-        TextField(
+        _labeledField(
+          label: 'Verification code',
           controller: _code,
           keyboardType: TextInputType.number,
-          textInputAction: TextInputAction.done,
           onSubmitted: (_) => _submitCode(),
-          decoration: _decoration('Verification code'),
         ),
         if (_inlineError != null) ...[
           const SizedBox(height: 8),
           Text(_inlineError!, style: TextStyle(color: Theme.of(context).colorScheme.error, fontSize: 13)),
         ],
         const SizedBox(height: 16),
-        FilledButton(onPressed: _submitCode, child: const Padding(
-          padding: EdgeInsets.symmetric(vertical: 4),
-          child: Text('Verify'),
-        )),
+        AppButton(
+          onPressed: _submitCode,
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          child: const Center(child: Text('Verify')),
+        ),
         const SizedBox(height: 8),
         Center(
           child: TextButton(onPressed: _resendCode, child: const Text("Didn't get a code? Resend")),
