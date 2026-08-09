@@ -1,9 +1,8 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import '../../app/config/environment.dart';
-import '../../app/theme/app_colors.dart';
+import 'auth_colors.dart';
 import 'auth_status_view.dart';
 import 'widgets/custom_auth_form.dart';
 
@@ -61,17 +60,13 @@ class _AuthBody extends StatelessWidget {
 
     return Stack(
       children: [
-        // Background gradient
+        // Background gradient — light pastel blue, not the old dark purple.
         Container(
           width: double.infinity,
           height: double.infinity,
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [
-                Color(0xFF4C1D95),
-                Color(0xFF6D28D9),
-                Color(0xFF8B5CF6),
-              ],
+              colors: [AuthColors.headerTop, AuthColors.headerBottom],
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
             ),
@@ -136,7 +131,7 @@ class _AuthBody extends StatelessWidget {
                               'Welcome Back',
                               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                                     fontWeight: FontWeight.bold,
-                                    color: const Color(0xFF1E1E2D),
+                                    color: AuthColors.textDark,
                                   ),
                             ),
                             const SizedBox(height: 4),
@@ -160,7 +155,7 @@ class _AuthBody extends StatelessWidget {
                               Icon(
                                 Icons.shield_outlined,
                                 size: 14,
-                                color: AppColors.primary.withValues(alpha: 0.6),
+                                color: AuthColors.primary.withValues(alpha: 0.6),
                               ),
                               const SizedBox(width: 6),
                               Text.rich(
@@ -211,20 +206,31 @@ class _AuthBody extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
-                    child: Image.asset(
-                      'assets/images/logo.png',
-                      width: 36,
-                      height: 36,
-                      fit: BoxFit.contain,
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(10),
+                      boxShadow: [
+                        BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 6, offset: const Offset(0, 2)),
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: Image.asset(
+                        'assets/images/logo.png',
+                        width: 36,
+                        height: 36,
+                        fit: BoxFit.contain,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 10),
                   const Text(
                     'PesaPlan',
                     style: TextStyle(
-                      color: Colors.white,
+                      color: AuthColors.textDark,
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 0.5,
@@ -236,17 +242,17 @@ class _AuthBody extends StatelessWidget {
               const Text(
                 'Welcome Back 👋',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: AuthColors.textDark,
                   fontSize: 22,
                   fontWeight: FontWeight.w700,
-                  letterSpacing: 0.5,
+                  letterSpacing: 0.3,
                 ),
               ),
               const SizedBox(height: 2),
-              Text(
+              const Text(
                 'Sign in to manage your finances',
                 style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.8),
+                  color: AuthColors.textMuted,
                   fontSize: 12,
                 ),
               ),
@@ -274,14 +280,14 @@ class _AuthBody extends StatelessWidget {
         height: 72,
         decoration: BoxDecoration(
           gradient: const LinearGradient(
-            colors: [Color(0xFF6D28D9), Color(0xFF8B5CF6)],
+            colors: [AuthColors.primary, AuthColors.primaryDark],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF6D28D9).withValues(alpha: 0.4),
+              color: AuthColors.primaryDark.withValues(alpha: 0.4),
               blurRadius: 16,
               offset: const Offset(0, 6),
             ),
@@ -289,7 +295,6 @@ class _AuthBody extends StatelessWidget {
         ),
         child: Stack(
           children: [
-            // Decorative circles
             Positioned(
               right: -12,
               top: -12,
@@ -314,7 +319,6 @@ class _AuthBody extends StatelessWidget {
                 ),
               ),
             ),
-
             Padding(
               padding: const EdgeInsets.all(10),
               child: Column(
@@ -376,20 +380,25 @@ class _AuthBody extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
       child: Row(
         children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: Image.asset(
-              'assets/images/logo.png',
-              width: 32,
-              height: 32,
-              fit: BoxFit.contain,
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.asset(
+                'assets/images/logo.png',
+                width: 32,
+                height: 32,
+                fit: BoxFit.contain,
+              ),
             ),
           ),
           const SizedBox(width: 8),
           const Text(
             'PesaPlan',
             style: TextStyle(
-              color: Colors.white,
+              color: AuthColors.textDark,
               fontSize: 16,
               fontWeight: FontWeight.bold,
               letterSpacing: 0.5,
@@ -399,13 +408,13 @@ class _AuthBody extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.15),
+              color: AuthColors.primary.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(20),
             ),
-            child: Text(
+            child: const Text(
               'Secure',
               style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.9),
+                color: AuthColors.primaryDark,
                 fontSize: 10,
                 fontWeight: FontWeight.w500,
               ),

@@ -2,20 +2,18 @@ import 'package:clerk_auth/clerk_auth.dart' as clerk;
 import 'package:clerk_flutter/clerk_flutter.dart';
 import 'package:flutter/material.dart';
 
-import '../../../ui/design_system/components/app_button.dart';
-import '../../../ui/design_system/components/app_text_field.dart';
+import '../auth_colors.dart';
 
 enum _ResetStep { enterEmail, enterCodeAndPassword }
 
 /// Password reset, using the same real Clerk API the official
 /// `ClerkForgottenPasswordPanel` uses (`initiatePasswordReset`, then
 /// `attemptSignIn` with both the code and the new password together in one
-/// call) — verified against the SDK's own source, not guessed.
+/// call) — verified against the SDK's own source.
 ///
-/// Deliberately self-contained: uses its own try/catch rather than sharing
+/// Self-contained: uses its own try/catch rather than sharing
 /// `CustomAuthForm`'s errorStream subscription, so errors always display
-/// inside this dialog regardless of what else is happening in the parent
-/// form underneath it.
+/// inside this dialog regardless of what else is happening underneath it.
 class ForgotPasswordDialog extends StatefulWidget {
   const ForgotPasswordDialog({super.key});
 
@@ -33,6 +31,8 @@ class _ForgotPasswordDialogState extends State<ForgotPasswordDialog> {
   final _code = TextEditingController();
   final _newPassword = TextEditingController();
   final _confirmPassword = TextEditingController();
+  bool _newPasswordVisible = false;
+  bool _confirmPasswordVisible = false;
   bool _isLoading = false;
   String? _error;
 
@@ -104,8 +104,6 @@ class _ForgotPasswordDialogState extends State<ForgotPasswordDialog> {
       );
       if (!mounted) return;
       if (authState.isSignedIn) {
-        // A successful reset signs the user in directly — the app's
-        // existing router redirect logic takes it from here.
         Navigator.of(context).pop(true);
       } else {
         setState(() {
@@ -123,18 +121,44 @@ class _ForgotPasswordDialogState extends State<ForgotPasswordDialog> {
     }
   }
 
-  Widget _labeledField({
+  Widget _field({
     required String label,
+    required IconData icon,
     required TextEditingController controller,
     bool obscureText = false,
+    bool showVisibilityToggle = false,
+    VoidCallback? onToggleVisibility,
     TextInputType keyboardType = TextInputType.text,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.black54)),
+        Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF334155))),
         const SizedBox(height: 6),
-        AppTextField(controller: controller, hintText: label, obscureText: obscureText, keyboardType: keyboardType),
+        Container(
+          decoration: BoxDecoration(color: const Color(0xFFF1F5FB), borderRadius: BorderRadius.circular(14)),
+          child: TextField(
+            controller: controller,
+            obscureText: obscureText,
+            keyboardType: keyboardType,
+            style: const TextStyle(fontSize: 14, color: AuthColors.textDark),
+            decoration: InputDecoration(
+              prefixIcon: Icon(icon, size: 20, color: const Color(0xFF8B98B5)),
+              suffixIcon: showVisibilityToggle
+                  ? IconButton(
+                      icon: Icon(
+                        obscureText ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                        size: 20,
+                        color: const Color(0xFF8B98B5),
+                      ),
+                      onPressed: onToggleVisibility,
+                    )
+                  : null,
+              border: InputBorder.none,
+              contentPadding: const EdgeInsets.symmetric(vertical: 14),
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -142,7 +166,7 @@ class _ForgotPasswordDialogState extends State<ForgotPasswordDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Reset your password'),
+      title: const Text('Reset your password', style: TextStyle(color: AuthColors.textDark)),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -151,21 +175,35 @@ class _ForgotPasswordDialogState extends State<ForgotPasswordDialog> {
             if (_step == _ResetStep.enterEmail) ...[
               const Text(
                 "Enter your account email and we'll send you a code to reset your password.",
-                style: TextStyle(color: Colors.black54, fontSize: 13),
+                style: TextStyle(color: AuthColors.textMuted, fontSize: 13),
               ),
               const SizedBox(height: 12),
-              _labeledField(label: 'Email', controller: _email, keyboardType: TextInputType.emailAddress),
+              _field(label: 'Email', icon: Icons.mail_outline_rounded, controller: _email, keyboardType: TextInputType.emailAddress),
             ] else ...[
               Text(
                 'Enter the code sent to ${_email.text.trim()}, and choose a new password.',
-                style: const TextStyle(color: Colors.black54, fontSize: 13),
+                style: const TextStyle(color: AuthColors.textMuted, fontSize: 13),
               ),
               const SizedBox(height: 12),
-              _labeledField(label: 'Verification code', controller: _code, keyboardType: TextInputType.number),
+              _field(label: 'Verification code', icon: Icons.pin_outlined, controller: _code, keyboardType: TextInputType.number),
               const SizedBox(height: 12),
-              _labeledField(label: 'New password', controller: _newPassword, obscureText: true),
+              _field(
+                label: 'New password',
+                icon: Icons.lock_outline_rounded,
+                controller: _newPassword,
+                obscureText: !_newPasswordVisible,
+                showVisibilityToggle: true,
+                onToggleVisibility: () => setState(() => _newPasswordVisible = !_newPasswordVisible),
+              ),
               const SizedBox(height: 12),
-              _labeledField(label: 'Confirm new password', controller: _confirmPassword, obscureText: true),
+              _field(
+                label: 'Confirm new password',
+                icon: Icons.lock_outline_rounded,
+                controller: _confirmPassword,
+                obscureText: !_confirmPasswordVisible,
+                showVisibilityToggle: true,
+                onToggleVisibility: () => setState(() => _confirmPasswordVisible = !_confirmPasswordVisible),
+              ),
             ],
             if (_error != null) ...[
               const SizedBox(height: 10),
@@ -179,13 +217,32 @@ class _ForgotPasswordDialogState extends State<ForgotPasswordDialog> {
         if (_isLoading)
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 16),
-            child: SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2)),
+            child: SizedBox(
+              height: 20,
+              width: 20,
+              child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation(AuthColors.primary)),
+            ),
           )
         else
-          AppButton(
-            onPressed: _step == _ResetStep.enterEmail ? _sendCode : _submitReset,
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            child: Text(_step == _ResetStep.enterEmail ? 'Send code' : 'Reset password'),
+          DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(colors: [AuthColors.primary, AuthColors.primaryDark]),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(12),
+                onTap: _step == _ResetStep.enterEmail ? _sendCode : _submitReset,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  child: Text(
+                    _step == _ResetStep.enterEmail ? 'Send code' : 'Reset password',
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ),
+            ),
           ),
       ],
     );
