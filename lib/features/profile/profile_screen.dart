@@ -6,6 +6,8 @@ import '../../core/services/auth_identity_service.dart';
 import '../debts/debts_screen.dart';
 import '../insights/health_score_screen.dart';
 import '../insights/insights_screen.dart';
+import '../legal/legal_content.dart';
+import '../legal/legal_document_screen.dart';
 import '../recurring/recurring_transactions_screen.dart';
 import '../reports/reports_screen.dart';
 import 'coming_soon_screen.dart';
@@ -218,6 +220,42 @@ class ProfileScreen extends ConsumerWidget {
                             description:
                                 'PesaPlan currently follows your device\'s light/dark setting. '
                                 'A manual override will live here.',
+                          ),
+                        ),
+                      ),
+                    ),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Divider(height: 1, thickness: 0.8, color: Color(0xFFE2E8F0)),
+                    ),
+                    _buildSettingsTile(
+                      context,
+                      icon: Icons.description_outlined,
+                      title: 'Terms of Service',
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const LegalDocumentScreen(
+                            title: 'Terms of Service',
+                            body: LegalContent.termsOfService,
+                            lastUpdated: LegalContent.lastUpdated,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Divider(height: 1, thickness: 0.8, color: Color(0xFFE2E8F0)),
+                    ),
+                    _buildSettingsTile(
+                      context,
+                      icon: Icons.privacy_tip_outlined,
+                      title: 'Privacy Policy',
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const LegalDocumentScreen(
+                            title: 'Privacy Policy',
+                            body: LegalContent.privacyPolicy,
+                            lastUpdated: LegalContent.lastUpdated,
                           ),
                         ),
                       ),

@@ -7,6 +7,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../auth_colors.dart';
+import '../../legal/legal_content.dart';
+import '../../legal/legal_document_screen.dart';
 import 'forgot_password_dialog.dart';
 
 enum _Mode { signIn, signUp }
@@ -535,7 +537,45 @@ class _CustomAuthFormState extends State<CustomAuthForm> {
                 value: _hasLegalAcceptance,
                 onChanged: (v) => setState(() => _hasLegalAcceptance = v ?? false),
               ),
-              const Expanded(child: Text('I agree to the Terms of Service and Privacy Policy', style: TextStyle(fontSize: 13))),
+              Expanded(
+                child: RichText(
+                  text: TextSpan(
+                    style: const TextStyle(fontSize: 13, color: Colors.black87),
+                    children: [
+                      const TextSpan(text: 'I agree to the '),
+                      TextSpan(
+                        text: 'Terms of Service',
+                        style: const TextStyle(color: AuthColors.primary, fontWeight: FontWeight.w600),
+                        recognizer: TapGestureRecognizer()
+                          ..onTap = () => Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => const LegalDocumentScreen(
+                                    title: 'Terms of Service',
+                                    body: LegalContent.termsOfService,
+                                    lastUpdated: LegalContent.lastUpdated,
+                                  ),
+                                ),
+                              ),
+                      ),
+                      const TextSpan(text: ' and '),
+                      TextSpan(
+                        text: 'Privacy Policy',
+                        style: const TextStyle(color: AuthColors.primary, fontWeight: FontWeight.w600),
+                        recognizer: TapGestureRecognizer()
+                          ..onTap = () => Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => const LegalDocumentScreen(
+                                    title: 'Privacy Policy',
+                                    body: LegalContent.privacyPolicy,
+                                    lastUpdated: LegalContent.lastUpdated,
+                                  ),
+                                ),
+                              ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ],
           ),
         ],
