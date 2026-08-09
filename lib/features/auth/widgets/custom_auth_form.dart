@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 
 import '../../../ui/design_system/components/app_button.dart';
 import '../../../ui/design_system/components/app_text_field.dart';
+import 'forgot_password_dialog.dart';
 
 enum _Mode { signIn, signUp }
 
@@ -307,6 +308,13 @@ class _CustomAuthFormState extends State<CustomAuthForm> {
           controller: _signInPassword,
           obscureText: true,
           onSubmitted: (_) => _signIn(),
+        ),
+        Align(
+          alignment: Alignment.centerRight,
+          child: TextButton(
+            onPressed: () => ForgotPasswordDialog.show(context),
+            child: const Text('Forgot password?'),
+          ),
         ),
         if (_inlineError != null) ...[
           const SizedBox(height: 8),
