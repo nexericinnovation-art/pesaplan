@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/providers/profile_provider.dart';
 import '../../core/services/auth_identity_service.dart';
+import 'account_security_screen.dart';
+import 'appearance_screen.dart';
 import '../debts/debts_screen.dart';
 import '../insights/health_score_screen.dart';
 import '../insights/insights_screen.dart';
@@ -181,10 +183,7 @@ class ProfileScreen extends ConsumerWidget {
                       title: 'Account Security',
                       onTap: () => Navigator.of(context).push(
                         MaterialPageRoute(
-                          builder: (_) => const ComingSoonScreen(
-                            title: 'Account Security',
-                            description: 'Password and session management for your account will live here.',
-                          ),
+                      builder: (_) => const AccountSecurityScreen(),
                         ),
                       ),
                     ),
@@ -215,12 +214,7 @@ class ProfileScreen extends ConsumerWidget {
                       title: 'Appearance',
                       onTap: () => Navigator.of(context).push(
                         MaterialPageRoute(
-                          builder: (_) => const ComingSoonScreen(
-                            title: 'Appearance',
-                            description:
-                                'PesaPlan currently follows your device\'s light/dark setting. '
-                                'A manual override will live here.',
-                          ),
+                      builder: (_) => const AppearanceScreen(),
                         ),
                       ),
                     ),

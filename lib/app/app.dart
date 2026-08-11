@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'router/app_router.dart';
 import 'router/router_refresh_notifier.dart';
 import 'theme/app_theme.dart';
+import '../core/providers/theme_mode_provider.dart';
 import '../core/services/clerk_session_bridge.dart';
 
 class MyApp extends ConsumerWidget {
@@ -13,12 +14,14 @@ class MyApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
+    final themeMode = ref.watch(themeModeProvider);
 
     Widget buildRouterApp() => MaterialApp.router(
           title: 'Pesaplan',
           debugShowCheckedModeBanner: false,
           theme: AppTheme.lightClayTheme,
-          themeMode: ThemeMode.light,
+          darkTheme: AppTheme.darkClayTheme,
+          themeMode: themeMode,
           routerConfig: router,
         );
 
